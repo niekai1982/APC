@@ -132,6 +132,4 @@ if __name__ == '__main__':
     test_input.chnsPyramidCompute(I)
     end = time()
     print "total spend time : %f" % (end - start)
-    print "hello github"
-    print "test github"
 
