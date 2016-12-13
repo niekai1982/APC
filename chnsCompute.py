@@ -268,6 +268,7 @@ if __name__ == "__main__":
     print "total spend time : %f" % (end_t - start_t)
 
     for i in range(len(chn_cp.chns.data)):
+        print len(chn_cp.chns.data)
         for j in range(len(chn_cp.chns.data[i])):
             plt.imshow(chn_cp.chns.data[i][j])
             plt.colorbar()

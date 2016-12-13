@@ -113,6 +113,7 @@ class ChnsPyramid(object):
         sz = I.shape[:2]
         self.getScales(sz)
         for i in self.isR:
+            self.chns.chns.data = []
             scale = self.scales[i]
             sz1 = np.round(np.true_divide(np.multiply(sz, scale), self.chns.pChns.shrink)) * self.chns.pChns.shrink
             if np.all(sz == sz1):
@@ -122,6 +123,7 @@ class ChnsPyramid(object):
             if (scale == .5 and self.pPyramid.nApprox > 0 or self.pPyramid.nPerOct == 1):
                 I = I1
             self.chns.compute(I1)
+            self.data[i] = self.chns.chns.data
 
 
 if __name__ == '__main__':
@@ -132,6 +134,10 @@ if __name__ == '__main__':
     test_input.chnsPyramidCompute(I)
     end = time()
     print "total spend time : %f" % (end - start)
-    print "hello github"
-    print "test github"
-
+    print test_input.isR
+    for data in test_input.data:
+        if  data != None:
+            for j in range(len(data)):
+                for k in range(len(data[j])):
+                    plt.imshow(data[j][k])
+                    plt.show()
