@@ -122,13 +122,19 @@ class ChnsPyramid(object):
             if (scale == .5 and self.pPyramid.nApprox > 0 or self.pPyramid.nPerOct == 1):
                 I = I1
             self.chns.compute(I1)
+            self.data[i] = self.chns.chns.data
+            print self.chns.chns.nTypes
+
 
 
 if __name__ == '__main__':
-    start = time()
     I = cv2.imread('test.jpg')
+    # I = cv2.resize(I, (I.shape[1]/2, I.shape[0]/2))
+    # plt.imshow(I)
+    # plt.show()
     test_input = ChnsPyramid()
-    test_input.pPyramid.minDs = [128, 128]
+    test_input.pPyramid.minDs = [16, 16]
+    start = time()
     test_input.chnsPyramidCompute(I)
     end = time()
     print "total spend time : %f" % (end - start)
