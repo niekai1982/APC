@@ -132,6 +132,5 @@ if __name__ == '__main__':
     test_input.chnsPyramidCompute(I)
     end = time()
     print "total spend time : %f" % (end - start)
-    # test_output = pyramid(pPyramid=test_input)
-    # print test_output.nTypes
+    print "hello github"
 
