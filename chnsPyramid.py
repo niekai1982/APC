@@ -103,10 +103,16 @@ class ChnsPyramid(object):
             (self.scaleshw, np.round(sz[1] * self.scales / self.chns.pChns.shrink) * self.chns.pChns.shrink / sz[1]),
             axis=-1)
         self.nScales = self.scales.shape[0]
+        self.data = [None] * self.nScales
         self.isR = np.arange(0, self.nScales, self.nApprox + 1)
         self.isA = np.arange(self.nScales)
         self.isA = np.delete(self.isA, self.isR)
-        self.data = [None] * self.nScales
+        self.isN = np.arange(self.nScales)
+        j = np.floor((self.isR[:-1] + self.isR[1:]) / 2) + 1
+        j = [0] + list(j) + [self.nScales]
+        j = np.array(j, dtype=np.int)
+        for i in range(self.isR.size):
+            self.isN[j[i] : j[i+1]] = self.isR[i]
 
 
     def computeLambdas(self):
@@ -130,7 +136,12 @@ class ChnsPyramid(object):
         self.lambdas /= np.log2(self.scales[isD[0]] / self.scales[isD[1]])
 
 
-    def computePyramid(self):
+    def computePyramid(self, sz):
+        for i in self.isA:
+            isR = self.isN[i]
+            sz1 = np.round(np.true_divide(np.multiply(sz, self.scales[i]), self.chns.pChns.shrink))
+            for j in range(self.nTypes):
+                ratio = (self.scales[i] / self.scales[isR]) ** (-self.lambdas[i])
         pass
 
 
@@ -139,17 +150,17 @@ class ChnsPyramid(object):
         self.getScales(sz)
         for i in self.isR:
             scale = self.scales[i]
-            sz1 = np.round(np.true_divide(np.multiply(sz, scale), self.chns.pChns.shrink)) * self.chns.pChns.shrink
+            sz1   = np.round(np.true_divide(np.multiply(sz, scale), self.chns.pChns.shrink)) * self.chns.pChns.shrink
             if np.all(sz == sz1):
                 I1 = I
             else:
                 I1 = cv2.resize(I, (int(sz1[1]), int(sz1[0])))
             if (scale == .5 and self.pPyramid.nApprox > 0 or self.pPyramid.nPerOct == 1):
-                I = I1
+                I  = I1
             self.chns = ChnsCompute()
             self.chns.compute(I1)
-            self.info = self.chns.chns.info
-            self.nTypes = self.chns.chns.nTypes
+            self.info    = self.chns.chns.info
+            self.nTypes  = self.chns.chns.nTypes
             self.data[i] = self.chns.chns.data
         self.computeLambdas()
         print self.lambdas
@@ -161,6 +172,7 @@ if __name__ == '__main__':
     test_input = ChnsPyramid()
     test_input.pPyramid.minDs = [16, 16]
     test_input.chnsPyramidCompute(I)
+    print test_input.nScales
     end = time()
     # print "total spend time : %f" % (end - start)
     # print test_input.isR
