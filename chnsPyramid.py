@@ -109,11 +109,35 @@ class ChnsPyramid(object):
         self.data = [None] * self.nScales
 
 
+    def computeLambdas(self):
+        assert self.isR.size >= 2
+        if self.isR.size >2:
+            isD = self.isR[1:3]
+            print isD
+        f0 = np.zeros(self.nTypes)
+        f1 = f0.copy()
+        d0 = self.data[self.isR[0]]
+        d1 = self.data[self.isR[1]]
+        for idx, d in enumerate(d0):
+            for d_a in d:
+                f0[idx] += d_a.sum() * 1.0 / d_a.size
+            f0[idx] /= len(d)
+        for idx, d in enumerate(d1):
+            for d_a in d:
+                f1[idx] += d_a.sum() * 1.0 / d_a.size
+            f1[idx] /= len(d)
+        self.lambdas = -np.log2(np.true_divide(f0, f1))
+        self.lambdas /= np.log2(self.scales[isD[0]] / self.scales[isD[1]])
+
+
+    def computePyramid(self):
+        pass
+
+
     def chnsPyramidCompute(self, I):
         sz = I.shape[:2]
         self.getScales(sz)
         for i in self.isR:
-            self.chns.chns.data = []
             scale = self.scales[i]
             sz1 = np.round(np.true_divide(np.multiply(sz, scale), self.chns.pChns.shrink)) * self.chns.pChns.shrink
             if np.all(sz == sz1):
@@ -122,22 +146,27 @@ class ChnsPyramid(object):
                 I1 = cv2.resize(I, (int(sz1[1]), int(sz1[0])))
             if (scale == .5 and self.pPyramid.nApprox > 0 or self.pPyramid.nPerOct == 1):
                 I = I1
+            self.chns = ChnsCompute()
             self.chns.compute(I1)
+            self.info = self.chns.chns.info
+            self.nTypes = self.chns.chns.nTypes
             self.data[i] = self.chns.chns.data
+        self.computeLambdas()
+        print self.lambdas
 
 
 if __name__ == '__main__':
     start = time()
     I = cv2.imread('test.jpg')
     test_input = ChnsPyramid()
-    test_input.pPyramid.minDs = [128, 128]
+    test_input.pPyramid.minDs = [16, 16]
     test_input.chnsPyramidCompute(I)
     end = time()
-    print "total spend time : %f" % (end - start)
-    print test_input.isR
-    for data in test_input.data:
-        if  data != None:
-            for j in range(len(data)):
-                for k in range(len(data[j])):
-                    plt.imshow(data[j][k])
-                    plt.show()
+    # print "total spend time : %f" % (end - start)
+    # print test_input.isR
+    # for data in test_input.data:
+    #     if  data != None:
+    #         for j in range(len(data)):
+    #             for k in range(len(data[j])):
+    #                 plt.imshow(data[j][k])
+    #                 plt.show()
