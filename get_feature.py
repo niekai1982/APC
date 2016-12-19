@@ -12,13 +12,14 @@ import feature.stub as stub
 import feature.vector as vector
 import misc.gradient as grad
 from time import time
+from test import sliding_window
 
 nor_size = (48, 32)
 EXT_DICT = ['.jpg', 'bmp', '.png']
 
 def get_files_name(path, ext_dict):
     files_ret = []
-    files = os.listdir(sample_path)
+    files = os.listdir(path)
     for file in files:
         if os.path.splitext(file)[-1] in ext_dict:
             files_ret.append(os.path.join(path, file))
@@ -39,8 +40,9 @@ def get_icf_feature(img, vector_stub):
 
 
 def get_hog_feature(img, vis_flag=0):
-    data = cv2.resize(img, nor_size)[...,0]
-    feature, hog_img = hog(data, orientations=9, pixels_per_cell=(8, 8), cells_per_block=(2, 2), visualise=True)
+    # data = img[...,0]
+    data = cv2.resize(img, (img.shape[1], img.shape[0]))[...,0]
+    feature, hog_img = hog(data, orientations=9, pixels_per_cell=(16, 16), cells_per_block=(2, 2), visualise=True)
     if vis_flag:
         fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(8, 4), sharex=True, sharey=True)
         ax1.axis('off')
@@ -85,14 +87,24 @@ def get_train_data(sample_path, vector_stub):
 
 
 if __name__ == '__main__':
-    # img = cv2.imread('test.jpg')
-    sample_path = r'e:\APC\sample_test'
-    vector_stub_path = r'e:\APC\feature\canditate.vec'
-    vec_stu = stub.read(vector_stub_path)
-    # get_icf_feature(img, vec_stu)
-    data, target, class_dict = get_train_data(sample_path, vec_stu)
-    np.savez('data_test', data=data, target=target)
-    dict_output = open('class_test.pkl', 'wb')
-    pickle.dump(class_dict, dict_output)
-    dict_output.close()
+    img = cv2.imread('test.jpg')
+
+    start = time()
+    feature = get_hog_feature(img, vis_flag=0)
+    end = time()
+    print (end - start)
+    print feature.shape
+    # for (x, y, window) in sliding_window(img, stepSize=2, windowSize=(32, 32)):
+    #     start = time()
+    #     end = time()
+    #     print (end - start)
+    # sample_path = r'e:\APC\sample_test'
+    # vector_stub_path = r'e:\APC\feature\canditate.vec'
+    # vec_stu = stub.read(vector_stub_path)
+    # # get_icf_feature(img, vec_stu)
+    # data, target, class_dict = get_train_data(sample_path, vec_stu)
+    # np.savez('data_test', data=data, target=target)
+    # dict_output = open('class_test.pkl', 'wb')
+    # pickle.dump(class_dict, dict_output)
+    # dict_output.close()
 

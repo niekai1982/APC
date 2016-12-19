@@ -119,7 +119,6 @@ class ChnsPyramid(object):
         assert self.isR.size >= 2
         if self.isR.size >2:
             isD = self.isR[1:3]
-            print isD
         f0 = np.zeros(self.nTypes)
         f1 = f0.copy()
         d0 = self.data[self.isR[0]]
@@ -163,7 +162,7 @@ class ChnsPyramid(object):
             self.nTypes  = self.chns.chns.nTypes
             self.data[i] = self.chns.chns.data
         self.computeLambdas()
-        print self.lambdas
+        print "lambda is : %s" % self.lambdas
 
 
 if __name__ == '__main__':
@@ -172,9 +171,8 @@ if __name__ == '__main__':
     test_input = ChnsPyramid()
     test_input.pPyramid.minDs = [16, 16]
     test_input.chnsPyramidCompute(I)
-    print test_input.nScales
     end = time()
-    # print "total spend time : %f" % (end - start)
+    print "total spend time : %f" % (end - start)
     # print test_input.isR
     # for data in test_input.data:
     #     if  data != None:
