@@ -8,8 +8,6 @@ from skimage.transform import pyramid_gaussian
 import time
 
 
-
-
 def pyramid(image, scale=1.2, minSize=(32,64)):
     yield image
     while True:
@@ -78,10 +76,9 @@ if __name__ == '__main__':
     # grayscale = cv2.resize(grayscale, (grayscale.shape[1] / 2, grayscale.shape[0] / 2))
     # plt.imshow(grayscale)
     
-    
 
-    hog = cv2.HOGDescriptor(_winSize=(16,16),_blockSize=(16,16),_blockStride=(8,8),_cellSize=(8,8),_nbins=9) 
-    
+    hog = cv2.HOGDescriptor(_winSize=(32,32),_blockSize=(16,16),_blockStride=(8,8),_cellSize=(8,8),_nbins=9)
+    win_nfeature = hog.getDescriptorSize()
 #    grayscale = cv2.resize(grayscale, (32,32))
 #    
 #    start = time.time()
@@ -90,14 +87,19 @@ if __name__ == '__main__':
 #    end = time.time()
 #    print "hog spend time : %f" % (end - start)
     start = time.time()
-    hog_feature = hog.compute(grayscale)
+    hog_feature = hog.compute(grayscale[:,:32], winStride=(8,8))
     end = time.time()
     print (end - start)
     hog_feature_s = []
     start = time.time()
-    for (x, y, window) in sliding_window(grayscale, stepSize=2, windowSize=(32,32)):
-        desc = hog.compute(window,winStride=(8,8))
-#        hog_feature_s.append[desc]
+    idx = 0
+    for (x, y, window) in sliding_window(grayscale[:,:32], stepSize=8, windowSize=(32,32)):
+        desc = hog.compute(window)
+#        plt.plot(desc)
+#        plt.plot(hog_feature[idx * win_nfeature : (idx + 1) * win_nfeature])
+#        plt.show()
+        idx += 1
+        print idx
     end = time.time()
     print (end - start)
 #    plt.imshow(grayscale)
@@ -113,9 +115,6 @@ if __name__ == '__main__':
 #        temp = hog.compute(resized)
 #    end = time.time()
 #    print (end - start)
-#    
-    
-
 
 
 # # used imutils
