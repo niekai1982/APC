@@ -77,7 +77,7 @@ if __name__ == '__main__':
     # plt.imshow(grayscale)
     
 
-    hog = cv2.HOGDescriptor(_winSize=(32,32),_blockSize=(16,16),_blockStride=(8,8),_cellSize=(8,8),_nbins=9)
+    hog = cv2.HOGDescriptor(_winSize=(64,32),_blockSize=(16,16),_blockStride=(8,8),_cellSize=(8,8),_nbins=9)
     win_nfeature = hog.getDescriptorSize()
 #    grayscale = cv2.resize(grayscale, (32,32))
 #    
@@ -87,21 +87,21 @@ if __name__ == '__main__':
 #    end = time.time()
 #    print "hog spend time : %f" % (end - start)
     start = time.time()
-    hog_feature = hog.compute(grayscale[:,:32], winStride=(8,8))
+    hog_feature = hog.compute(grayscale, winStride=(16,16))
     end = time.time()
     print (end - start)
-    hog_feature_s = []
-    start = time.time()
-    idx = 0
-    for (x, y, window) in sliding_window(grayscale[:,:32], stepSize=8, windowSize=(32,32)):
-        desc = hog.compute(window)
-#        plt.plot(desc)
-#        plt.plot(hog_feature[idx * win_nfeature : (idx + 1) * win_nfeature])
-#        plt.show()
-        idx += 1
-        print idx
-    end = time.time()
-    print (end - start)
+#     hog_feature_s = []
+#     start = time.time()
+#     idx = 0
+#     for (x, y, window) in sliding_window(grayscale[:,:32], stepSize=8, windowSize=(32,32)):
+#         desc = hog.compute(window)
+# #        plt.plot(desc)
+# #        plt.plot(hog_feature[idx * win_nfeature : (idx + 1) * win_nfeature])
+# #        plt.show()
+#         idx += 1
+#         print idx
+#     end = time.time()
+#     print (end - start)
 #    plt.imshow(grayscale)
     
 #    start = time.time()
