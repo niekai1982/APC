@@ -94,6 +94,7 @@ if __name__ == '__main__':
     end = time()
     print (end - start)
     print feature.shape
+
     # for (x, y, window) in sliding_window(img, stepSize=2, windowSize=(32, 32)):
     #     start = time()
     #     end = time()
