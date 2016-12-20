@@ -6,9 +6,26 @@ import matplotlib.pyplot as plt
 import os
 from skimage.transform import pyramid_gaussian
 import time
+from BrainTest import Get_data
+from sklearn.ensemble import AdaBoostClassifier
+from sklearn.tree import DecisionTreeClassifier
+import scipy.io as sio
 
 
-def pyramid(image, scale=1.2, minSize=(32,64)):
+def forestInds(data, thrs, fids, child, N):
+    # could be optimize
+    inds = np.zeros((N, 1), dtype = np.int)
+    for i in range(N):
+        k = 0
+        while child[k]:
+            if data[i, fids[k]] < thrs[k]:
+                k = child[k] - 1
+            else:
+                k = child[k]
+        inds[i] = k
+    return inds
+
+def pyramid(image, scale=1.2, minSize=(256,128)):
     yield image
     while True:
         w = int(image.shape[1] / scale)
@@ -17,13 +34,57 @@ def pyramid(image, scale=1.2, minSize=(32,64)):
             break
         yield image
 
-def sliding_window(image, stepSize, windowSize):
-    for y in xrange(0, image.shape[0] - windowSize[1], stepSize):
-        for x in xrange(0, image.shape[1] - windowSize[0], stepSize):
-            yield (x, y, image[y:y + windowSize[1], x:x + windowSize[0]])
+def sliding_window(imageSize, stepSize, windowSize):
+    for y in xrange(0, imageSize[0] - windowSize[1] + 1, stepSize):
+        for x in xrange(0, imageSize[1] - windowSize[0] + 1, stepSize):
+            yield (x, y)
 
 
 if __name__ == '__main__':
+    
+#    test_data = sio.loadmat('data_x1.mat')
+
+    test = sio.loadmat('model.mat')
+
+#    X0 = test_data['X1']
+
+    fids      = test['model'][0][0][0]
+    thrs      = test['model'][0][0][1]
+    child     = test['model'][0][0][2]
+    hs        = test['model'][0][0][3]
+    weights   = test['model'][0][0][4]
+    depth     = test['model'][0][0][5]
+    errs      = test['model'][0][0][6]
+    losses    = test['model'][0][0][7]
+    treeDepth = test['model'][0][0][8]
+
+    nWeaks = fids.shape[1]
+#    N = X0.shape[0]
+#    hs_out = np.zeros((N, 1))
+
+#    start = time.time()
+#    for i in range(nWeaks):
+#        ids = forestInds(X0, thrs[:,i], fids[:,i], child[:,i], N)
+#        hs_out = hs_out + hs[ids, i]
+#    end = time.time()
+#    print (end - start)
+    
+    
+
+
+#    X, y = Get_data('data_test.npz')
+#    bdt = AdaBoostClassifier(DecisionTreeClassifier(max_depth=1), algorithm='SAMME', n_estimators=200)
+#    bdt.fit(X,y)
+#    
+#    test = X[1]
+#    test.shape = 1, -1
+#    start = time.time()
+#    out = bdt.predict(test)
+#    end = time.time()
+#    print (end - start)
+#    print out
+
+    
 
 #    parser = argparse.ArgumentParser()
 #    parser.add_argument("-i", "--image",  default='test.jpg' ,help="Path to the image")
@@ -71,14 +132,15 @@ if __name__ == '__main__':
 #    plt.imshow(clone)
 #    plt.show()
     
-    image = cv2.imread('test.jpg')
-    grayscale = image[:,:,1]
+    image = cv2.imread('777.jpg')
+#    image = cv2.resize(image,(image.shape[1]/2,image.shape[0]/2))
+#    grayscale = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     # grayscale = cv2.resize(grayscale, (grayscale.shape[1] / 2, grayscale.shape[0] / 2))
     # plt.imshow(grayscale)
     
 
     hog = cv2.HOGDescriptor(_winSize=(64,32),_blockSize=(16,16),_blockStride=(8,8),_cellSize=(8,8),_nbins=9)
-    win_nfeature = hog.getDescriptorSize()
+#    win_nfeature = hog.getDescriptorSize()
 #    grayscale = cv2.resize(grayscale, (32,32))
 #    
 #    start = time.time()
@@ -86,10 +148,54 @@ if __name__ == '__main__':
 #        desc = hog.compute(grayscale)
 #    end = time.time()
 #    print "hog spend time : %f" % (end - start)
-    start = time.time()
-    hog_feature = hog.compute(grayscale, winStride=(16,16))
-    end = time.time()
-    print (end - start)
+#    start = time.time()
+    
+    for img in pyramid(image):
+        grayscale = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        
+        
+        start = time.time()
+        hog_feature = hog.compute(grayscale, winStride=(4,4))
+        end = time.time()
+        print "hog spend time : %f" % (end - start)
+        
+        nWinFeat = hog.getDescriptorSize()
+        nWin = hog_feature.shape[0] / nWinFeat
+        print "number of windows : %d" % nWin
+        
+        hog_feature.shape = nWin, nWinFeat
+        
+        hs_out = np.zeros((nWin, 1))
+        
+        start = time.time()
+        for i in range(nWeaks):
+            ids = forestInds(hog_feature, thrs[:,i], fids[:,i], child[:,i], nWin)
+            hs_out = hs_out + hs[ids, i]
+        end = time.time()
+        print "detection spend time : %f" % (end - start)
+        
+        
+        
+        coor_x = np.zeros((nWin, 1),dtype=np.int)
+        coor_y = np.zeros((nWin, 1),dtype=np.int)
+        for i, (x, y) in enumerate(sliding_window(grayscale.shape, stepSize=4, windowSize=(64, 32))):
+            coor_x[i] = x
+            coor_y[i] = y
+        
+        test_x = coor_x[hs_out > 15]
+        test_y = coor_y[hs_out > 15]
+        
+        vis = img.copy()
+        for (x, y) in zip(test_x, test_y):
+            cv2.rectangle(vis, (x, y), (x + 64, y + 32), (255,0,0),2)
+        plt.imshow(vis)
+        plt.show()
+        
+    
+        
+    
+#    end = time.time()
+#    print (end - start)
 #     hog_feature_s = []
 #     start = time.time()
 #     idx = 0

@@ -12,7 +12,7 @@ import feature.stub as stub
 import feature.vector as vector
 import misc.gradient as grad
 from time import time
-from test import sliding_window
+# from test import sliding_window
 
 nor_size = (48, 32)
 EXT_DICT = ['.jpg', 'bmp', '.png']
