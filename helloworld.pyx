@@ -1,4 +1,2 @@
-cdef extern from"stdio.h":
-    extern int printf(const char *format, ...)
-def SayHello():
-    printf("hello,world\n")
+cdef void say_hello(name):
+    print "Hello %s" % name
