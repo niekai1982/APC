@@ -133,11 +133,11 @@ class ChnsCompute(object):
         # end1 = time()
         # print "colorpreprocess spend time : %f" % (end1 - end)
         self.gradMagChnCompute()
-        # end2 = time()
+        end2 = time()
         # print "gradMagpreprocess spend time : %f" % (end2 - end1)
         self.gradHistChnCompute()
-        # end3 = time()
-        # print "gradHistpreprocess spend time : %f" % (end3 - end2)
+        end3 = time()
+        print "gradHistpreprocess spend time : %f" % (end3 - end2)
         end = time()
         print "chnsCompute spend time : %f" % (end - start)
 
@@ -174,7 +174,7 @@ class ChnsCompute(object):
     def convTri(self, I, r, s):
         pass
 
-    def oriented_gradient(self, grad_x, grad_y, degree, bin_size):
+    def oriented_gradient(self, degree_mat, degree, bin_size):
         """
         Returns the oriented gradient channel.
 
@@ -185,17 +185,15 @@ class ChnsCompute(object):
 
         For example, if degree is '30' and bin size is '10', this routine computes edges for the degree interval 20 to 40.
         """
-        assert grad_x.shape == grad_y.shape
 
         lower_bound = degree - bin_size
         upper_bound = degree + bin_size
 
-        rows, cols = grad_x.shape
+        rows, cols = degree_mat.shape
 
         oriented = np.zeros((rows, cols), np.uint8)
 
-        d = np.arctan2(grad_y, grad_x) * 180 / np.pi
-        mask = (d > lower_bound) * (d < upper_bound)
+        mask = (degree_mat > lower_bound) * (degree_mat < upper_bound)
         oriented[mask] = 255
 
         return oriented
@@ -242,8 +240,10 @@ class ChnsCompute(object):
         p = self.pChns.pGradHist
         nm = 'gradient histogram'
 
+        self.degree = np.arctan2(self.gradient_y, self.gradient_x) * 180 / np.pi
+
         for i, deg in enumerate(ORIENTATION_DEGREES):
-            orie = self.oriented_gradient(self.gradient_x, self.gradient_y, deg, ORIENTATION_BIN)
+            orie = self.oriented_gradient(self.degree, deg, ORIENTATION_BIN)
             orie = cv2.medianBlur(orie, 3)
             orie = cv2.bitwise_and(orie, self.magnitude)
             self.H = orie.copy() if not i else np.dstack((self.H, orie))
@@ -258,7 +258,7 @@ if __name__ == "__main__":
     chn_cp = ChnsCompute()
     chn_cp.compute(img)
     end_t = time()
-    print chn_cp.chns.nTypes
+    # print chn_cp.chns.nTypes
 
     # print chn_cp.chns.info.name
     # print chn_cp.chns.info.nChns
@@ -268,7 +268,7 @@ if __name__ == "__main__":
     print "total spend time : %f" % (end_t - start_t)
 
     for i in range(len(chn_cp.chns.data)):
-        print len(chn_cp.chns.data)
+        # print len(chn_cp.chns.data)
         for j in range(len(chn_cp.chns.data[i])):
             plt.imshow(chn_cp.chns.data[i][j])
             plt.colorbar()

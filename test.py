@@ -10,6 +10,7 @@ from BrainTest import Get_data
 from sklearn.ensemble import AdaBoostClassifier
 from sklearn.tree import DecisionTreeClassifier
 import scipy.io as sio
+from common import draw_str
 
 
 def forestInds(data, thrs, fids, child, N):
@@ -28,13 +29,13 @@ def forestInds(data, thrs, fids, child, N):
     return out
 
 def pyramid(image, scale=1.2, minSize=(256,128)):
-    yield image
+    yield scale, image
     while True:
         w = int(image.shape[1] / scale)
         image = imutils.resize(image, width=w)
         if image.shape[0] < minSize[1] or image.shape[1] < minSize[0]:
             break
-        yield image
+        yield scale, image
 
 def sliding_window(imageSize, stepSize, windowSize):
     for y in xrange(0, imageSize[0] - windowSize[1] + 1, stepSize):
@@ -61,53 +62,85 @@ if __name__ == '__main__':
 
     nWeaks = fids.shape[1]
 
-    image = cv2.imread(r'E:\PROGRAM\APC\sample_test\sample\1595.jpg')
-    gray  = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    path = r'E:\PROGRAM\APC\sample_test\1'
+    files = os.listdir(path)
+    stop_flag = False
+    continue_flag = True
+    for file in files:
+        image = cv2.imread(os.path.join(path, file))
+        gray  = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        vis = image.copy()
 
-    hog = cv2.HOGDescriptor(_winSize=(64,32),_blockSize=(16,16),_blockStride=(8,8),_cellSize=(8,8),_nbins=9)
+        hog = cv2.HOGDescriptor(_winSize=(64,32),_blockSize=(16,16),_blockStride=(8,8),_cellSize=(8,8),_nbins=9)
 
-    total_start = time.time()
-    for img in pyramid(image):
-        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        start = time.time()
-        hog_feature = hog.compute(gray, winStride=(2,2))
-        end = time.time()
-        print "hog spend time : %f" % (end - start)
-        
-        nWinFeat = hog.getDescriptorSize()
-        nWin = hog_feature.shape[0] / nWinFeat
-        print "number of windows : %d" % nWin
-        
-        hog_feature.shape = nWin, nWinFeat
-        
-        hs_out = np.zeros((nWin, 1))
-        
-        start = time.time()
-        for i in range(nWeaks):
-            ids = forestInds(hog_feature, thrs[:,i], fids[:,i], child[:,i], nWin)
-            hs_out = hs_out + hs[ids, i]
-        end = time.time()
-        print "detection spend time : %f" % (end - start)
-        
-        coor_x = np.zeros((nWin, 1),dtype=np.int)
-        coor_y = np.zeros((nWin, 1),dtype=np.int)
-        for i, (x, y) in enumerate(sliding_window(gray.shape, stepSize=2, windowSize=(64, 32))):
-            coor_x[i] = x
-            coor_y[i] = y
-        
-        test_x = coor_x[hs_out > 10]
-        test_y = coor_y[hs_out > 10]
-        
-        vis = img.copy()
-        for (x, y) in zip(test_x, test_y):
-            cv2.rectangle(vis, (x, y), (x + 64, y + 32), (255,0,0),2)
+        for scale, img in pyramid(image):
+            total_start = time.time()
+            gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+            start = time.time()
+            hog_feature = hog.compute(gray, winStride=(8,8))
+            end = time.time()
+            # print "hog spend time : %f" % (end - start)
 
-        # cv2.imshow("window", vis)
-        # cv2.waitKey(10)
-        plt.imshow(vis)
-        plt.show()
-    total_end = time.time()
-    print "total spend time : %f" % (total_end - total_start)
+            nWinFeat = hog.getDescriptorSize()
+            nWin = hog_feature.shape[0] / nWinFeat
+            # print "number of windows : %d" % nWin
+
+            hog_feature.shape = nWin, nWinFeat
+
+            hs_out = np.zeros((nWin, 1))
+
+            start = time.time()
+            for i in range(nWeaks):
+                ids = forestInds(hog_feature, thrs[:,i], fids[:,i], child[:,i], nWin)
+                hs_out = hs_out + hs[ids, i]
+            end = time.time()
+            # print "detection spend time : %f" % (end - start)
+
+            coor_x = np.zeros((nWin, 1),dtype=np.int)
+            coor_y = np.zeros((nWin, 1),dtype=np.int)
+
+            # temp = np.zeros_like(gray, dtype=np.float32)
+
+            for i, (x, y) in enumerate(sliding_window(gray.shape, stepSize=8, windowSize=(64, 32))):
+                coor_x[i] = x
+                coor_y[i] = y
+                # temp[y, x] = hs_out[i]
+
+            # plt.imshow(temp)
+            # plt.colorbar()
+            # plt.show()
+
+            test_x = coor_x[hs_out > 15]
+            test_y = coor_y[hs_out > 15]
+            hs_vis = hs_out[hs_out > 15]
+
+            for (x, y, hs_idx) in zip(test_x, test_y, hs_vis):
+                scale = image.shape[1] * 1.0 / img.shape[1]
+                cv2.rectangle(vis, (int(x * scale), int(y * scale)), (int((x + 64) * scale), int((y + 32) * scale)), (0,0,255),2)
+                draw_str(vis, (int((x - 1) * scale), int((y - 2) * scale)), 'HS: %.2f' % hs_idx)
+            total_end = time.time()
+            print "total spend time : %f" % (total_end - total_start)
+            # cv2.imshow("window", vis)
+            # cv2.waitKey(10)
+        cv2.imshow("window", vis)
+        while True:
+            ch = cv2.waitKey(1)
+            if ch == 27:
+                stop_flag = True
+                break
+            if ch == ord(' '):
+                continue_flag = True
+                break
+        if stop_flag:
+            cv2.destroyAllWindows()
+            stop_flag = False
+            break
+        if continue_flag:
+            continue_flag = False
+            continue
+
+    # plt.imshow(vis)
+    # plt.show()
 #    win_nfeature = hog.getDescriptorSize()
 #    grayscale = cv2.resize(grayscale, (32,32))
 #
