@@ -63,32 +63,77 @@ if __name__ == '__main__':
     nWeaks = fids.shape[1]
 
 
-    path = r'E:\PROGRAM\APC\sample_test\1'
+    path = r'E:\PROGRAM\APC\sample_test\3'
     files = os.listdir(path)
     stop_flag = False
     continue_flag = True
     for file in files:
+        
         image = cv2.imread(os.path.join(path, file))
+        image = cv2.resize(image, (image.shape[1]/2, image.shape[0]/2))
         vis = image.copy()
+        
+        start = time.time()
         chn_cp = ChnsCompute()
         chn_cp.compute(image)
+       
+        feat = []
+        coor_x = []
+        coor_y = []
+        
+        
+        
         for (x, y) in sliding_window(image.shape, 8, (64, 32)):
-            feat = np.hstack([chn_cp.chns.data[i][j][y/4:(y/4 + 8), x/4:(x/4 + 16)].flatten() for i in range(len(chn_cp.chns.data)) for j in range(len(chn_cp.chns.data[i]))])
-            print feat.shape
+            out = np.hstack([chn_cp.chns.data[i][j][y/4:(y/4 + 8), x/4:(x/4 + 16)].flatten() for i in range(len(chn_cp.chns.data)) for j in range(len(chn_cp.chns.data[i]))])
+            feat.append(out)
+            coor_x.append(x)
+            coor_y.append(y)
 
-        # cv2.imshow("window", vis)
-        # while True:
-        #     ch = cv2.waitKey(1)
-        #     if ch == 27:
-        #         stop_flag = True
-        #         break
-        #     if ch == ord(' '):
-        #         continue_flag = True
-        #         break
-        # if stop_flag:
-        #     cv2.destroyAllWindows()
-        #     stop_flag = False
-        #     break
-        # if continue_flag:
-        #     continue_flag = False
-        #     continue
+        feat = np.array(feat)
+        
+        end = time.time()
+        print (end - start)
+        
+        nWin, nWinFeat = feat.shape
+        hs_out = np.zeros((nWin, 1))
+        
+        for i in range(nWeaks):
+            ids = forestInds(feat, thrs[:,i], fids[:,i], child[:,i], nWin)
+            hs_out = hs_out + hs[ids, i]
+            
+        
+        
+        coor_x = np.array(coor_x)
+        coor_y = np.array(coor_y)
+        
+        coor_x.shape = -1,1
+        coor_y.shape = -1,1
+
+        test_x = coor_x[hs_out > 15]
+        test_y = coor_y[hs_out > 15]
+
+        for (x, y) in zip(test_x, test_y):
+            cv2.rectangle(vis, (x, y), (x + 64, y + 32), (0,0,255),1)
+        end = time.time()
+       
+
+        cv2.imshow("window", vis)
+        ch = cv2.waitKey(1)
+        if ch == 27:
+            cv2.destroyAllWindows()
+            break
+#        while True:
+#            ch = cv2.waitKey(1)
+#            if ch == 27:
+#                stop_flag = True
+#                break
+#            if ch == ord(' '):
+#                continue_flag = True
+#                break
+#        if stop_flag:
+#            cv2.destroyAllWindows()
+#            stop_flag = False
+#            break
+#        if continue_flag:
+#            continue_flag = False
+#            continue
