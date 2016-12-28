@@ -156,7 +156,7 @@ if __name__ == '__main__':
 
     nWeaks = fids.shape[1]
 
-    path = r'E:\PROGRAM\APC\sample_test\2'
+    path = r'E:\PROGRAM\APC\sample_test\3'
     files = os.listdir(path)
     stop_flag = False
     continue_flag = True
@@ -168,7 +168,6 @@ if __name__ == '__main__':
         image = cv2.resize(image, (image.shape[1] / 2, image.shape[0] / 2))
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         vis = image.copy()
-
 
 
         start = time.time()
@@ -221,8 +220,8 @@ if __name__ == '__main__':
         coor_x.shape = -1, 1
         coor_y.shape = -1, 1
 
-        test_x = coor_x[hs_out > 15]
-        test_y = coor_y[hs_out > 15]
+        test_x = coor_x[hs_out > 16]
+        test_y = coor_y[hs_out > 16]
 
 
         for (x, y) in zip(test_x, test_y):
