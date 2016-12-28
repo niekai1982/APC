@@ -54,7 +54,7 @@ def crop_img(I, shrink):
     return I
 
 
-def get_feature(I, shrink):
+def get_acf_feature(I, shrink):
     I = crop_img(I, shrink)
     h, w = I.shape[:2]
     h /= shrink
@@ -156,7 +156,7 @@ if __name__ == '__main__':
 
     nWeaks = fids.shape[1]
 
-    path = r'E:\PROGRAM\APC\sample_test\2'
+    path = r'E:\PROGRAM\APC\sample_test\3'
     files = os.listdir(path)
     stop_flag = False
     continue_flag = True
@@ -182,7 +182,7 @@ if __name__ == '__main__':
                 tracker_temp.append(tracker)
         tracker_list = tracker_temp
 
-        luv, m, h = get_feature(image, shrink=4)
+        luv, m, h = get_acf_feature(image, shrink=4)
         chns_feat = np.dstack((luv,m,h))
 
 
