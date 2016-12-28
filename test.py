@@ -5,6 +5,7 @@ import cv2
 import imutils
 import numpy as np
 import scipy.io as sio
+from STC import STC
 import matplotlib.pyplot as plt
 
 from chnsCompute import ChnsCompute
@@ -155,19 +156,37 @@ if __name__ == '__main__':
 
     nWeaks = fids.shape[1]
 
-    path = r'E:\PROGRAM\APC\sample_test\3'
+    path = r'E:\PROGRAM\APC\sample_test\2'
     files = os.listdir(path)
     stop_flag = False
     continue_flag = True
+    tracker_list = []
+
     for file in files:
 
         image = cv2.imread(os.path.join(path, file))
         image = cv2.resize(image, (image.shape[1] / 2, image.shape[0] / 2))
+        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        vis = image.copy()
+
+
+
         start = time.time()
+        tracker_temp = []
+        for tracker in tracker_list:
+            pos_p = tracker.pos
+            tracker.updata_tracker(gray)
+            pos_n = tracker.pos
+            if abs(pos_p[0] - pos_n[0]) > 1:
+                tracker.draw_state(vis)
+                tracker_temp.append(tracker)
+        tracker_list = tracker_temp
+
         luv, m, h = get_feature(image, shrink=4)
         chns_feat = np.dstack((luv,m,h))
 
-        vis = image.copy()
+
+        # print "feature extract spend time : %f" % (end - start)
         #
         # start = time.time()
         # chn_cp = ChnsCompute()
@@ -182,6 +201,9 @@ if __name__ == '__main__':
             feat_mat.append(feat_vector)
             coor_x.append(x)
             coor_y.append(y)
+
+        end1 = time.time()
+        # print "test time spend : %f" % (end1 - end)
         #
         feat_mat = np.array(feat_mat)
         #
@@ -202,12 +224,16 @@ if __name__ == '__main__':
         test_x = coor_x[hs_out > 15]
         test_y = coor_y[hs_out > 15]
 
+
         for (x, y) in zip(test_x, test_y):
-            cv2.rectangle(vis, (x, y), (x + 64, y + 32), (0, 0, 255), 1)
+            tracker = STC(gray, [x, y, x + 64, y + 32])
+            tracker_list.append(tracker)
+            cv2.rectangle(vis, (x, y), (x + 64, y + 32), (0, 255, 255), 1)
 
-        end = time.time()
-        print "total spend time : %f" % (end - start)
 
+        end_total = time.time()
+        print "total spend time : %f" % (end_total - start)
+        cv2.namedWindow("window", 0)
         cv2.imshow("window", vis)
         ch = cv2.waitKey(1)
         if ch == 27:
