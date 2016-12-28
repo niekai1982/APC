@@ -177,7 +177,10 @@ if __name__ == '__main__':
             pos_p = tracker.pos
             tracker.updata_tracker(gray)
             pos_n = tracker.pos
-            if abs(pos_p[0] - pos_n[0]) > 1:
+            flag = np.array(pos_p) - np.array(pos_n)
+            flag = np.abs(flag)
+            flag_i = np.abs(flag)
+            if np.any(flag > 1):
                 tracker.draw_state(vis)
                 tracker_temp.append(tracker)
         tracker_list = tracker_temp
