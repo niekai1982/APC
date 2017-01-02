@@ -156,7 +156,7 @@ if __name__ == '__main__':
 
     nWeaks = fids.shape[1]
 
-    path = r'E:\PROGRAM\APC\sample_test\3'
+    path = r'E:\PROGRAM\APC\sample_test\1'
     files = os.listdir(path)
     stop_flag = False
     continue_flag = True

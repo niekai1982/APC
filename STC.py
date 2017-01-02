@@ -127,12 +127,12 @@ class STC:
 
 class App:
     def __init__(self, video_src, paused=False):
-        # self.cap = video.create_capture(video_src)
-        # _, self.frame = self.cap.read()
-        self.video_src = video_src
-        self.frames = os.listdir(video_src)
+        self.cap = video.create_capture(video_src)
+        _, self.frame = self.cap.read()
+        # self.video_src = video_src
+        # self.frames = os.listdir(video_src)
         # print self.frames
-        self.frame = cv2.imread(os.path.join(video_src, self.frames[0]))
+        # self.frame = cv2.imread(os.path.join(video_src, self.frames[0]))
         print 'FrameShape: ', self.frame.shape
         cv2.imshow('Video', self.frame)
         self.rect_sel = RectSelector('Video', self.onrect)
@@ -148,12 +148,12 @@ class App:
         i = 0
         while True:
             if not self.paused:
-                # ret, self.frame = self.cap.read()
-                self.frame = cv2.imread(os.path.join(self.video_src, self.frames[i]))
-                i += 1
-                # if not ret:
-                #     print 'Get frame fail!'
-                #     break
+                ret, self.frame = self.cap.read()
+                # self.frame = cv2.imread(os.path.join(self.video_src, self.frames[i]))
+                # i += 1
+                if not ret:
+                    print 'Get frame fail!'
+                    break
                 frame_gray = cv2.cvtColor(self.frame, cv2.COLOR_BGR2GRAY)
                 for tracker in self.trackers:
                     tracker.updata_tracker(frame_gray)
@@ -179,12 +179,6 @@ class App:
 
 
 if __name__ == '__main__':
-    video_src = r'E:\PROGRAM\APC\sample_test\2'
+    # video_src = r'E:\PROGRAM\APC\sample_test\2'
+    video_src = '0'
     App(video_src).run()
-
-
-
-
-
-
-
