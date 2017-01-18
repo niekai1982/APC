@@ -156,7 +156,7 @@ if __name__ == '__main__':
 
     nWeaks = fids.shape[1]
 
-    path = r'E:\PROGRAM\APC\sample_test\1'
+    path = r'E:\PROGRAM\APC\sample_test\3'
     files = os.listdir(path)
     stop_flag = False
     continue_flag = True
@@ -165,6 +165,7 @@ if __name__ == '__main__':
     for file in files:
 
         image = cv2.imread(os.path.join(path, file))
+        image = image[:,:,::-1]
         image = cv2.resize(image, (image.shape[1] / 2, image.shape[0] / 2))
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         vis = image.copy()

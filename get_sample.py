@@ -2,7 +2,7 @@ import os
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
-from common import draw_str, RectSelector
+from common import draw_str, RectSelector, draw_rect
 
 roi_x = 160
 roi_y = 32
@@ -41,52 +41,70 @@ def get_manul(sample_path, save_path):
 
     sample_rects = []
     file_idx = 0
+    out_flag = False
 
     def Onrect(rect):
         sample_rects.append(rect)
+
+    def filter_extr(file_name):
+        return os.path.splitext(file_name)[-1] in ['.JPG','.jpg','.bmp']
 
     cv2.namedWindow('Frame', 1)
     rect_sel = RectSelector('Frame', Onrect)
 
     sample_files = os.listdir(sample_path)
-    frame = cv2.imread(os.path.join(sample_path, sample_files[file_idx]))
-    file_name = os.path.splitext(sample_files[file_idx])[0]
-    file_idx += 1
+    sample_files = filter(filter_extr, sample_files)
 
-    paused_flag = True
+    for file in sample_files:
 
-    while True:
-        if not paused_flag and file_idx < len(sample_files):
-            frame = cv2.imread(os.path.join(sample_path, sample_files[file_idx]))
-            file_name = os.path.splitext(sample_files[file_idx])[0]
-            file_idx += 1
-            paused_flag = True
+        sample_rects = []
+        frame = cv2.imread(os.path.join(sample_path, file))
+        frame = frame[:,:,::-1]
+        file_name = os.path.splitext(file)[0]
 
-        vis = frame.copy()
-        rect_sel.draw(vis)
 
-        cv2.imshow('Frame', vis)
-        ch = cv2.waitKey(1)
-        if ch == 27:
-            cv2.destroyAllWindows()
-            print sample_rects
+        while True:
+            vis = frame.copy()
+            rect_sel.draw(vis)
+            draw_str(vis, (20,20), file_name)
+            for rect in sample_rects:
+                x = rect[0]
+                y = rect[1]
+                w = rect[2] - rect[0]
+                h = rect[3] - rect[1]
+                draw_str(vis, (rect[0],rect[1] - 5), '(%d,%d,%d,%d)' % (x,y,w,h))
+                draw_rect(vis, rect)
+            cv2.imshow('Frame', vis)
+            ch = cv2.waitKey(1)
+            if ch == 27:
+                cv2.destroyAllWindows()
+                out_flag = True
+                break
+            if ch == ord('n'):
+                sample_rects = []
+                break
+            if ch == ord('s'):
+                num_rects = len(sample_rects)
+                print num_rects
+                coor_file_name = file_name + '.txt'
+                coor_file_path = os.path.join(sample_path, coor_file_name)
+                fp = open(coor_file_path, 'wb')
+                for idx_rect, rect in enumerate(sample_rects):
+                    x0, y0, x1, y1 = rect
+                    x_c = (x0 + x1) * 1. / 2
+                    y_c = (y0 + y1) * 1. / 2
+                    w = (x1 - x0) * 1.
+                    h = (y1 - y0) * 1.
+                    coor_res = '%f %f %f %f' % (x_c / vis.shape[1], y_c / vis.shape[0], w / vis.shape[1], h / vis.shape[0])
+                    fp.write("0" + " " + coor_res + "\n")
+                fp.close()
+            if ch == ord('r'):
+                sample_rects = []
+        if out_flag:
             break
-        if ch == ord('n'):
-            paused_flag = False
-            continue
-        if ch == ord('s'):
-            num_rects = len(sample_rects)
-            print num_rects
-            for idx_rect, rect in enumerate(sample_rects):
-                x0, y0, x1, y1 = rect
-                rect_name = os.path.join(save_path, file_name + '_' + str(idx_rect) + '.jpg')
-                cv2.imwrite(rect_name, frame[y0:y1, x0:x1])
-            sample_rects = []
-        if ch == ord('r'):
-            pass
-    return
 
 
 if __name__ == '__main__':
-    get_manul('./sample', './test')
+    get_manul(r'E:\car_data', r'E:\PROGRAM\APC\sample_test\8\sample')
+
     pass
