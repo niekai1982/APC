@@ -6,14 +6,12 @@ import imutils
 import numpy as np
 import scipy.io as sio
 from STC import STC
-import matplotlib.pyplot as plt
 
-from chnsCompute import ChnsCompute
 
 GRAD_DDEPTH = cv2.CV_16S  # Word size for gradient channels.
-ORIENTATION_DEGREES = [15, 45, 75, 105, 135, 165]  # Central degrees for gradient orientation channels.
+# Central degrees for gradient orientation channels.
+ORIENTATION_DEGREES = [15, 45, 75, 105, 135, 165]
 ORIENTATION_BIN = 14  # Bin size for orientation channels.
-
 
 
 def oriented_gradient(degree_mat, degree, bin_size):
@@ -39,7 +37,6 @@ def oriented_gradient(degree_mat, degree, bin_size):
     oriented[mask] = 255
 
     return oriented
-
 
 
 def crop_img(I, shrink):
@@ -127,7 +124,8 @@ def sliding_window(imageSize, stepSize, windowSize, chns_feat):
     for y in xrange(0, imageSize[0] - windowSize[1] + 1, stepSize):
         for x in xrange(0, imageSize[1] - windowSize[0] + 1, stepSize):
             # feat_veator = np.hstack([chns_feat[y / 4 : (y / 4 + 8), x / 4 : (x / 4 + 16), i].flatten() for i in range(chns_feat.shape[-1])])
-            feat_vector = chns_feat[y/4:y/4 + 8,x/4:x/4+16].flatten()
+            feat_vector = chns_feat[
+                y / 4:y / 4 + 8, x / 4:x / 4 + 16].flatten()
             yield (x, y, feat_vector)
 
 
@@ -136,7 +134,8 @@ def sliding_window_test(imageSize, stepSize, windowSize, chns_feat):
     for y in xrange(0, imageSize[0] - windowSize[1] + 1, stepSize):
         for x in xrange(0, imageSize[1] - windowSize[0] + 1, stepSize):
             # feat_veator = np.hstack([chns_feat[y / 4 : (y / 4 + 8), x / 4 : (x / 4 + 16), i].flatten() for i in range(chns_feat.shape[-1])])
-            chns_feat_vector = chns_feat[y/4:y/4 + 8,x/4:x/4+16].flatten()
+            chns_feat_vector = chns_feat[
+                y / 4:y / 4 + 8, x / 4:x / 4 + 16].flatten()
             out.append(chns_feat_vector)
     return out
 
@@ -165,11 +164,10 @@ if __name__ == '__main__':
     for file in files:
 
         image = cv2.imread(os.path.join(path, file))
-        image = image[:,:,::-1]
+        image = image[:, :, ::-1]
         image = cv2.resize(image, (image.shape[1] / 2, image.shape[0] / 2))
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         vis = image.copy()
-
 
         start = time.time()
         tracker_temp = []
@@ -183,8 +181,7 @@ if __name__ == '__main__':
         tracker_list = tracker_temp
 
         luv, m, h = get_feature(image, shrink=4)
-        chns_feat = np.dstack((luv,m,h))
-
+        chns_feat = np.dstack((luv, m, h))
 
         # print "feature extract spend time : %f" % (end - start)
         #
@@ -197,7 +194,7 @@ if __name__ == '__main__':
         coor_y = []
         #
         # out = sliding_window_test(image.shape,8,(64,32),chns_feat)
-        for (x, y, feat_vector) in sliding_window(image.shape, 8, (64, 32), chns_feat):
+        for (x, y, feat_vector) in sliding_window(image.shape, 4, (64, 32), chns_feat):
             feat_mat.append(feat_vector)
             coor_x.append(x)
             coor_y.append(y)
@@ -212,7 +209,8 @@ if __name__ == '__main__':
         hs_out = np.zeros((nWin, 1))
 
         for i in range(nWeaks):
-            ids = forestInds(feat_mat, thrs[:, i], fids[:, i], child[:, i], nWin, nWinFeat)
+            ids = forestInds(feat_mat, thrs[:, i], fids[
+                             :, i], child[:, i], nWin, nWinFeat)
             hs_out = hs_out + hs[ids, i]
 
         coor_x = np.array(coor_x)
@@ -224,12 +222,10 @@ if __name__ == '__main__':
         test_x = coor_x[hs_out > 16]
         test_y = coor_y[hs_out > 16]
 
-
         for (x, y) in zip(test_x, test_y):
             tracker = STC(gray, [x, y, x + 64, y + 32])
             tracker_list.append(tracker)
             cv2.rectangle(vis, (x, y), (x + 64, y + 32), (0, 255, 255), 1)
-
 
         end_total = time.time()
         print "total spend time : %f" % (end_total - start)

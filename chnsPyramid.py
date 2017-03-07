@@ -4,6 +4,7 @@ from chnsCompute import *
 
 eps = 2.2204e-16
 
+pPyramid = {'pChns':{},'nPerOct':8,'nOctUp':0,'nApprox':-1,'lambda':[],'pad':[0,0],'minDs':[16, 16],'smooth':1,'concat':1,'complete':1}
 
 class pPyramid(object):
     """

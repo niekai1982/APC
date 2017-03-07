@@ -15,10 +15,68 @@ import feature.vector as vector
 import misc.gradient as grad
 import matplotlib.pyplot as plt
 from time import time
+from conTri import convTri
 
 GRAD_DDEPTH = cv2.CV_16S  # Word size for gradient channels.
 ORIENTATION_DEGREES = [15, 45, 75, 105, 135, 165]  # Central degrees for gradient orientation channels.
 ORIENTATION_BIN = 14  # Bin size for orientation channels.
+
+
+class C_pChns(object):
+    def __init__(self, **data):
+        self.__dict__.update(data)
+class C_pColor(object):
+    def __init__(self, **data):
+        self.__dict__.update(data)
+class C_pGradMag(object):
+    def __init__(self, **data):
+        self.__dict__.update(data)
+class C_pGradHist(object):
+    def __init__(self, **data):
+        self.__dict__.update(data)
+class C_pCustom(object):
+    def __init__(self, **data):
+        self.__dict__.update(data)
+
+
+def chnsCompute(I=[], *varargin):
+    if len(varargin)==1 and I:
+        pChns = varargin[0]
+    else:
+        pChns = PChns()
+        pChns.shrink = 4
+        pChns.pColor = C_pColor(enabled=1, smooth=1,colorSpace='luv')
+        pChns.pGradMag = C_pGradMag(enabled=1, colorChn=0, normRad=5, normConst=.005, full=0)
+        pChns.pGradHist = C_pGradHist(enable=1, binsize=[], nOrients=6, softBin=0, useHog=0, clipHog=.2)
+        pChns,pCustom = C_pCustom(enable=1, name='REQ', hFunc='REQ', pFunc={}, padWith=0)
+        pChns.complete = 1
+    if len(varargin)==0 and not I:
+        chns = pChns
+        return chns
+    class C_info(object):
+        def __init__(self, **data):
+            self.__dict__.update(data)
+    class C_chns(object):
+        def __init__(self, **data):
+            self.__dict__.update(data)
+    info = C_info(name={},pChn={},nChns={},padWidth={})
+    chns = C_chns(pChns=pChns,nTypes=0,data=[],info=info)
+    shrink = pChns.shrink
+    h, w = I.shape[:2]
+    cr = np.mod([h, w], shrink)
+    if np.any(cr):
+        h = h - cr[0]
+        w = w - cr[1]
+    I = I[:h, :w]
+
+    # compute color channels
+    p = pChns.pColor
+    nm = 'color channels'
+    I = cv2.cvtColor(I, cv2.COLOR_RGB2LUV)
+    I = convTri(p.smooth)
+    
+
+
 
 class PChns(object):
     """
