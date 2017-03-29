@@ -48,7 +48,7 @@ def chnsCompute(I=[], *varargin):
         pChns.pColor = C_pColor(enabled=1, smooth=1,colorSpace='luv')
         pChns.pGradMag = C_pGradMag(enabled=1, colorChn=0, normRad=5, normConst=.005, full=0)
         pChns.pGradHist = C_pGradHist(enable=1, binsize=[], nOrients=6, softBin=0, useHog=0, clipHog=.2)
-        pChns,pCustom = C_pCustom(enable=1, name='REQ', hFunc='REQ', pFunc={}, padWith=0)
+        pChns.pCustom = C_pCustom(enable=1, name='REQ', hFunc='REQ', pFunc={}, padWith=0)
         pChns.complete = 1
     if len(varargin)==0 and not I:
         chns = pChns
