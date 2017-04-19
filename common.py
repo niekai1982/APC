@@ -9,6 +9,7 @@ import cv2
 import os
 from contextlib import contextmanager
 import itertools as it
+import matplotlib.pyplot as plt
 
 image_extensions = ['.bmp', '.jpg', '.jpeg', '.png', '.tif', '.tiff', '.pbm', '.pgm', '.ppm']
 
@@ -219,3 +220,11 @@ def draw_keypoints(vis, keypoints, color = (0, 255, 255)):
     for kp in keypoints:
             x, y = kp.pt
             cv2.circle(vis, (int(x), int(y)), 2, color)
+
+def mulShow(*arg):
+    num_param = len(arg)
+    for idx in range(num_param):
+        plt.subplot(1,num_param,idx + 1)
+        plt.imshow(arg[idx])
+        plt.colorbar()
+    plt.show()

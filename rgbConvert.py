@@ -1,6 +1,7 @@
 ___author__ = 'kai'
 
 import cv2
+import numpy as np
 import matplotlib.pyplot as plt
 
 def rgbConvert(I, dstColorSpace):
@@ -11,9 +12,9 @@ def rgbConvert(I, dstColorSpace):
     """
     colorSpaces = {'gray': cv2.COLOR_RGB2GRAY, 'luv': cv2.COLOR_RGB2LUV, 'hsv':cv2.COLOR_RGB2HSV}
     if dstColorSpace not in colorSpaces.keys():
-        return I
+        return I.astype(np.single) / 255
     else:
-        return cv2.cvtColor(I, colorSpaces[dstColorSpace])
+        return cv2.cvtColor(I, colorSpaces[dstColorSpace]).astype(np.single) / 255
 
 
 if __name__ == '__main__':

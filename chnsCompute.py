@@ -304,6 +304,10 @@ class ChnsCompute(object):
         for i, deg in enumerate(ORIENTATION_DEGREES):
             orie = self.oriented_gradient(self.degree, deg, ORIENTATION_BIN)
             orie = cv2.medianBlur(orie, 3)
+            print orie.dtype
+            print orie.shape
+            print self.magnitude.dtype
+            print self.magnitude.shape
             orie = cv2.bitwise_and(orie, self.magnitude)
             self.H = orie.copy() if not i else np.dstack((self.H, orie))
         if p.enabled:
@@ -311,26 +315,29 @@ class ChnsCompute(object):
 
 
 if __name__ == "__main__":
+    I = cv2.imread('peppers.png')
+    chn_cp = ChnsCompute()
+    chn_cp.compute(I)
     
-    sample_path = r'E:\PROGRAM\APC\sample_train\0'
-    files = os.listdir(sample_path)
-
-    test = []
-    for file in files:
-        s_img = cv2.imread(os.path.join(sample_path, file))
-        start_t = time()
-        chn_cp = ChnsCompute()
-        chn_cp.compute(s_img)
-        end_t = time()
-
-    # print chn_cp.chns.nTypes
-    # print chn_cp.chns.info.name
-    # print chn_cp.chns.info.nChns
-    # print chn_cp.chns.info.pChn
-    # print chn_cp.chns.info.padWith
-
-        print "total spend time : %f" % (end_t - start_t)
-        out = np.hstack([chn_cp.chns.data[i][j].flatten() for i in range(len(chn_cp.chns.data)) for j in range(len(chn_cp.chns.data[i]))])
-        test.append(out)
-    test = np.array(test)
+    # sample_path = r'E:\PROGRAM\APC\sample_train\0'
+    # files = os.listdir(sample_path)
+    #
+    # test = []
+    # for file in files:
+    #     s_img = cv2.imread(os.path.join(sample_path, file))
+    #     start_t = time()
+    #     chn_cp = ChnsCompute()
+    #     chn_cp.compute(s_img)
+    #     end_t = time()
+    #
+    # # print chn_cp.chns.nTypes
+    # # print chn_cp.chns.info.name
+    # # print chn_cp.chns.info.nChns
+    # # print chn_cp.chns.info.pChn
+    # # print chn_cp.chns.info.padWith
+    #
+    #     print "total spend time : %f" % (end_t - start_t)
+    #     out = np.hstack([chn_cp.chns.data[i][j].flatten() for i in range(len(chn_cp.chns.data)) for j in range(len(chn_cp.chns.data[i]))])
+    #     test.append(out)
+    # test = np.array(test)
            
