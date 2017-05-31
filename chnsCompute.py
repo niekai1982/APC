@@ -25,42 +25,53 @@ ORIENTATION_BIN = 14  # Bin size for orientation channels.
 class C_pChns(object):
     def __init__(self, **data):
         self.__dict__.update(data)
+
+
 class C_pColor(object):
     def __init__(self, **data):
         self.__dict__.update(data)
+
+
 class C_pGradMag(object):
     def __init__(self, **data):
         self.__dict__.update(data)
+
+
 class C_pGradHist(object):
     def __init__(self, **data):
         self.__dict__.update(data)
+
+
 class C_pCustom(object):
     def __init__(self, **data):
         self.__dict__.update(data)
 
 
 def chnsCompute(I=[], *varargin):
-    if len(varargin)==1 and I:
+    if len(varargin) == 1 and I:
         pChns = varargin[0]
     else:
         pChns = PChns()
         pChns.shrink = 4
-        pChns.pColor = C_pColor(enabled=1, smooth=1,colorSpace='luv')
+        pChns.pColor = C_pColor(enabled=1, smooth=1, colorSpace='luv')
         pChns.pGradMag = C_pGradMag(enabled=1, colorChn=0, normRad=5, normConst=.005, full=0)
         pChns.pGradHist = C_pGradHist(enable=1, binsize=[], nOrients=6, softBin=0, useHog=0, clipHog=.2)
         pChns.pCustom = C_pCustom(enable=1, name='REQ', hFunc='REQ', pFunc={}, padWith=0)
         pChns.complete = 1
-    if len(varargin)==0 and not I:
+    if len(varargin) == 0 and not I:
         chns = pChns
         return chns
+
     class C_info(object):
         def __init__(self, **data):
             self.__dict__.update(data)
+
     class C_chns(object):
         def __init__(self, **data):
             self.__dict__.update(data)
-    info = C_info(name={},pChn={},nChns={},padWidth={})
-    chns = C_chns(pChns=pChns,nTypes=0,data=[],info=info)
+
+    info = C_info(name={}, pChn={}, nChns={}, padWidth={})
+    chns = C_chns(pChns=pChns, nTypes=0, data=[], info=info)
     shrink = pChns.shrink
     h, w = I.shape[:2]
     cr = np.mod([h, w], shrink)
@@ -74,8 +85,6 @@ def chnsCompute(I=[], *varargin):
     nm = 'color channels'
     I = cv2.cvtColor(I, cv2.COLOR_RGB2LUV)
     I = convTri(p.smooth)
-    
-
 
 
 class PChns(object):
@@ -164,24 +173,23 @@ class Chns(object):
     """
 
     def __init__(self, pChns, nType=10):
-        self.pChns  = pChns
+        self.pChns = pChns
         self.nTypes = 0
-        self.data   = []
-        self.info   = self.info()
+        self.data = []
+        self.info = self.info()
 
     class info(object):
         def __init__(self):
-            self.name    = []
-            self.pChn    = []
-            self.nChns   = []
+            self.name = []
+            self.pChn = []
+            self.nChns = []
             self.padWith = []
 
 
 class ChnsCompute(object):
-
     def __init__(self):
         self.pChns = PChns()
-        self.chns  = Chns(self.pChns)
+        self.chns = Chns(self.pChns)
 
     def compute(self, I):
         # start = time()
@@ -207,16 +215,16 @@ class ChnsCompute(object):
         self.h /= self.pChns.shrink
         self.w /= self.pChns.shrink
 
-        self.gray_img   = cv2.cvtColor(self.I, cv2.COLOR_BGR2GRAY)
-        self.gray_img   = cv2.GaussianBlur(self.gray_img, (3, 3), 0)
+        self.gray_img = cv2.cvtColor(self.I, cv2.COLOR_BGR2GRAY)
+        self.gray_img = cv2.GaussianBlur(self.gray_img, (3, 3), 0)
 
         self.gradient_x = cv2.Sobel(self.gray_img, GRAD_DDEPTH, 1, 0)
         self.gradient_y = cv2.Sobel(self.gray_img, GRAD_DDEPTH, 0, 1)
 
-        self.gx_scaled  = cv2.convertScaleAbs(self.gradient_x)
-        self.gy_scaled  = cv2.convertScaleAbs(self.gradient_y)
+        self.gx_scaled = cv2.convertScaleAbs(self.gradient_x)
+        self.gy_scaled = cv2.convertScaleAbs(self.gradient_y)
 
-        self.magnitude  = cv2.addWeighted(self.gx_scaled, 0.5, self.gy_scaled, 0.5, 0)
+        self.magnitude = cv2.addWeighted(self.gx_scaled, 0.5, self.gy_scaled, 0.5, 0)
 
     def crop_img(self, I, shrink):
         # crop I so divisible by shrink and get target dimensions
@@ -261,7 +269,7 @@ class ChnsCompute(object):
         h1, w1 = data.shape[:2]
         if h1 != h or w1 != w:
             data = cv2.resize(data, (w, h))
-            assert np.all(np.mod(np.array([h1, w1], np.float) / np.array([h, w], np.float),1) == 0)
+            assert np.all(np.mod(np.array([h1, w1], np.float) / np.array([h, w], np.float), 1) == 0)
         data = cv2.split(data)
         self.chns.data.append(data)
         self.chns.nTypes += 1
@@ -287,7 +295,7 @@ class ChnsCompute(object):
         p = self.pChns.pGradMag
         nm = 'gradient magnitude'
 
-        if  p.enabled:
+        if p.enabled:
             self.addChn(self.magnitude, nm, p, 0, self.h, self.w)
             # self.addChn(I, nm, p, 'replicate', h, w)
 
@@ -318,7 +326,7 @@ if __name__ == "__main__":
     I = cv2.imread('peppers.png')
     chn_cp = ChnsCompute()
     chn_cp.compute(I)
-    
+
     # sample_path = r'E:\PROGRAM\APC\sample_train\0'
     # files = os.listdir(sample_path)
     #
@@ -340,4 +348,3 @@ if __name__ == "__main__":
     #     out = np.hstack([chn_cp.chns.data[i][j].flatten() for i in range(len(chn_cp.chns.data)) for j in range(len(chn_cp.chns.data[i]))])
     #     test.append(out)
     # test = np.array(test)
-           

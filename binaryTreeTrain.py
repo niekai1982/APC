@@ -1,37 +1,255 @@
-import os
-import numpy as np
+from sklearn.datasets import make_blobs
 import matplotlib.pyplot as plt
-import cv2
-from adaBoostTrain import getTrainData
+import numpy as np
 
-class Tree(object):
-    def __init__(self):
-        self.nBins = 256
-        self.maxDepth = 2
-        self.minWeight = 0.01
-        self.fracFtrs = 1
-        self.nTreads = 16
+"""
+INPUTS
+  data       - data for training tree
+   .X0         - [N0xF] negative feature vectors
+   .X1         - [N1xF] positive feature vectors
+   .wts0       - [N0x1] negative weights
+   .wts1       - [N1x1] positive weights
+   .xMin       - [1xF] optional vals defining feature quantization
+   .xStep      - [1xF] optional vals defining feature quantization
+   .xType      - [] optional original data type for features
+  pTree      - additional params (struct or name/value pairs)
+   .nBins      - [256] maximum number of quanizaton bins (<=256)
+   .maxDepth   - [1] maximum depth of tree
+   .minWeight  - [.01] minimum sample weigth to allow split
+   .fracFtrs   - [1] fraction of features to sample for each node split
+   .nThreads   - [16] max number of computational threads to use
 
-dfs = Tree()
-X0, X1 = getTrainData(nFilePath='data0.pkl', pFilePath='data1.pkl')
+ OUTPUTS
+  tree       - learned decision tree model struct w the following fields
+   .fids       - [Kx1] feature ids for each node
+   .thrs       - [Kx1] threshold corresponding to each fid
+   .child      - [Kx1] index of child for each node (1-indexed)
+   .hs         - [Kx1] log ratio (.5*log(p/(1-p)) at each node
+   .weights    - [Kx1] total sample weight at each node
+   .depth      - [Kx1] depth of each node
+  data       - data used for training tree (quantized version of input)
+  err        - decision tree training error
+"""
 
-N0, F = X0.shape
-N1, F1 = X1.shape
+esp = 1e-6
 
-xMin = np.zeros((1, F))
-xStep = np.ones((1, F))
-xType = X0.dtype
-
-wts0 = np.ones((N0, 1)) / N0
-wts1 = np.ones((N1, 1)) / N1
-
-w = wts0.sum() + wts1.sum()
-if (np.abs(w - 1) > 1e-3):
-    wts0 = wts0 / w
-    wts1 = wts1 / w
-    
-xMin = np.min((X0.min(axis=0), X1.min(axis=0)), axis=0) - .01
-xMax = np.max((X0.max(axis=0), X1.max(axis=0)), axis=0) + .01
-xStep = (xMax - xMin) / (dfs.nBins - 1)
+class pTree(object):
+    def __init__(self, **data):
+        self.__dict__.update(data)
 
 
+class pData(object):
+    def __init__(self, **data):
+        self.__dict__.update(data)
+
+
+def binaryTreeTrain(data, pTree):
+    """
+
+    :type pTree: pTree
+    :type data: pData
+    """
+    # Intial Data Struct
+    X0 = data.X0
+    X1 = data.X1
+    wts0 = data.wts0
+    wts1 = data.wts1
+    xMin = data.xMin
+    xStep = data.xStep
+    xType = data.xType
+
+    # Initial Tree Struct
+    nBins = pTree.nBins
+    maxDepth = pTree.maxDepth
+    minWeight = pTree.minWeight
+    fracFtrs = pTree.fracFtrs
+    nThreads = pTree.nThreads
+
+    N0, F = X0.shape
+    N1, F1 = X1.shape
+    assert F == F1
+
+    if not xType:
+        xMin = np.zeros((1, F))
+        xStep = np.ones((1, F))
+        xType = np.double
+
+    assert wts0.dtype == np.float
+    assert wts0.dtype == np.float
+
+    if not wts0:
+        wts0 = np.ones((N0, 1)) / N0
+        wts1 = np.ones((N1, 1)) / N1
+
+    w = wts0.sum() + wts1.sum()
+
+    if (abs(w - 1) > 1e-3):
+        wts0 = wts0 / w
+        wts1 = wts1 / w
+
+    if X0.dtype != np.uint8 or X0.dtype != np.uint8:
+        xMin = np.minimum(X0.min(0), X1.min(0)) - .01
+        xMax = np.maximum(X0.max(0), X1.max(0)) + .01
+        xStep = (xMax - xMin) / (nBins - 1)
+        X0 = np.uint8(np.round((X0 - xMin) / xStep))
+        X1 = np.uint8(np.round((X1 - xMin) / xStep))
+
+    K = 2 * (N0 + N1)
+
+    errs = np.zeros((K, 1), xType)
+    thrs = np.zeros((K, 1), xType)
+
+    hs = np.zeros((K, 1), dtype=np.single)
+    weights = hs.copy()
+
+    fids = np.zeros((K, 1), dtype=np.uint32)
+    child = fids.copy()
+    depth = fids.copy()
+
+    wtsAll0 = [None] * K
+    wtsAll0[0] = wts0
+    wtsAll1 = [None] * K
+    wtsAll1[0] = wts1
+
+    k = 0
+    K = 1
+    while k < K:
+
+        # get node weights and prior
+        wts0 = wtsAll0[k]
+        wtsAll0[k] = None
+        w0 = wts0.sum()
+        wts1 = wtsAll1[k]
+        wtsAll1[k] = None
+        w1 = wts1.sum()
+
+        w = w0 + w1
+        prior = w1 / w
+
+        weights[k] = w
+        errs[k] = min(prior, 1 - prior)
+        hs[k] = max(-4, min(4, .5 * np.log(prior / (1 - prior))))
+
+        if prior < 1e-3 or prior > 1 - 1e-3 or depth[k] >= maxDepth or w < minWeight:
+            k = k + 1
+            continue
+
+        fidsSt = range(F)
+
+        if fracFtrs < 1:
+            fidsSt = np.random.permutation(F)[:int(np.floor(F * fracFtrs))]
+
+        errsSt, thrsSt = binaryTreeTrain1(X0, X1, np.single(wts0 / w), np.single(wts1 / w),
+                                          nBins, prior, fidsSt, nThreads)
+        print errsSt, thrsSt
+        fid = np.argsort(errsSt)[0]
+        thr = np.single(thrsSt[fid] + .5)
+        fid = fidsSt[fid]
+
+        left0 = X0[:, fid] < thr
+        left1 = X1[:, fid] < thr
+
+        if (np.any(left0) or np.any(left1)) and (np.any(~left0) or np.any(~left1)):
+            thr = xMin[fid] + xStep[fid] * thr
+            child[k] = K
+            fids[k] = fid
+            thrs[k] = thr
+            wtsAll0[K] = wts0 * left0.T
+            wtsAll0[K + 1] = wts0 * ~left0.T
+            wtsAll1[K] = wts1 * left1.T
+            wtsAll1[K + 1] = wts0 * ~left1.T
+            depth[K:K+2] = depth[k] + 1
+            K = K + 2
+        k = k + 1
+    K = K - 1
+    tree.fids = fids[:K + 1]
+    tree.thrs = thrs[:K + 1]
+    tree.child = child[:K + 1]
+    tree.hs = child[:K + 1]
+    tree.weights = weights[:K + 1]
+    tree.depth = depth[:K + 1]
+    err = errs[:K + 1] * tree.weights*(tree.child==0)
+    return tree, data, err
+
+
+def binaryTreeTrain1(X0, X1, wts0, wts1, nBins, prior, fidsSt, nThreads):
+    N0, F = X0.shape
+    N1, F1 = X1.shape
+    assert F == F1
+
+    errs = np.empty((F, 1), dtype=np.float)
+    thrs = np.empty((F, 1), dtype=np.uint8)
+
+    for f in fidsSt:
+        cdf0 = np.zeros((nBins, 1), dtype=np.float)
+        cdf1 = np.zeros((nBins, 1), dtype=np.float)
+        thr = 1
+        if prior < .5:
+            e0 = prior
+            e1 = 1 - prior
+        else:
+            e0 = 1 - prior
+            e1 = prior
+        for i in range(N0):
+            cdf0[X0[i, f]] += wts0[i]
+        for i in range(N1):
+            cdf1[X1[i, f]] += wts1[i]
+        for i in range(1, nBins):
+            cdf0[i] += cdf0[i - 1]
+            cdf1[i] += cdf1[i - 1]
+        for i in range(nBins):
+            e = prior - cdf1[i] + cdf0[i]
+            if (e0 - e) > esp:
+                e0 = e
+                e1 = 1 - e
+                thr = i
+            elif (e - e1) > esp:
+                e0 = 1 - e
+                e1 = e
+                thr = i
+        errs[f] = e0
+        thrs[f] = thr
+    return errs, thrs
+
+
+if __name__ == '__main__':
+    print 'start ----->'
+
+    # data_src, label = make_blobs(n_samples=1000, n_features=2, centers=2)
+    # plt.scatter(data_src[:, 0], data_src[:, 1], c=label, marker='+')
+    # plt.show()
+
+    data = pData()
+    data.X0 = np.array([1, 2, 3, 5])
+    data.X1 = np.array([4, 6, 7, 8])
+    data.X0.shape = -1, 1
+    data.X1.shape = -1, 1
+    data.wts0 = np.array([], np.float)
+    data.wts1 = np.array([], np.float)
+    data.xMin = []
+    data.xStep = []
+    data.xType = []
+
+    tree = pTree()
+    tree.nBins = 256
+    tree.maxDepth = 2
+    tree.minWeight = .01
+    tree.fracFtrs = 1
+    tree.nThreads = 16
+
+    # X0 = np.array([1, 2, 3, 5])
+    # X1 = np.array([4, 6, 7, 8])
+    #
+    # X0.shape = -1, 1
+    # X1.shape = -1, 1
+    #
+    # nBins = 10
+    # wts0 = np.ones((4, 1)) / 5
+    # wts1 = np.ones((4, 1)) / 5
+    # wts0[:3] = 0
+    # prior = .8
+    # fidst = range(1)
+
+    tree, data, err = binaryTreeTrain(data, tree)
+
+    print "end<--------"
