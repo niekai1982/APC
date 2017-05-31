@@ -1,6 +1,7 @@
 from sklearn.datasets import make_blobs
 import matplotlib.pyplot as plt
 import numpy as np
+from sklearn.datasets import make_gaussian_quantiles
 
 """
 INPUTS
@@ -141,7 +142,7 @@ def binaryTreeTrain(data, pTree):
 
         errsSt, thrsSt = binaryTreeTrain1(X0, X1, np.single(wts0 / w), np.single(wts1 / w),
                                           nBins, prior, fidsSt, nThreads)
-        fid = np.argsort(errsSt)[0]
+        fid = np.argsort(errsSt, axis=0)[0]
         thr = np.single(thrsSt[fid] + .5)
         fid = fidsSt[fid]
 
@@ -215,11 +216,17 @@ if __name__ == '__main__':
     print 'start ----->'
 
     data_src, label = make_blobs(n_samples=1000, n_features=2, centers=2)
-    plt.scatter(data_src[:, 0], data_src[:, 1], c=label, marker='+')
+    X1, y1 = make_gaussian_quantiles(cov=2., n_samples=200, n_features=2, n_classes=2, random_state=1)
+    X2, y2 = make_gaussian_quantiles(mean=(3, 3), cov=1.5, n_samples=300, n_features=2, n_classes=2, random_state=1)
+    X = np.concatenate((X1, X2))
+    y = np.concatenate((y1, -y2 + 1))
+
+    plt.scatter(X[:, 0], X[:, 1], c=y, marker='+')
+    plt.show()
 
     data = pData()
-    data.X0 = data_src[label==0]
-    data.X1 = data_src[label==1]
+    data.X0 = X[y==0][:,::-1]
+    data.X1 = X[y==1][:,::-1]
     print data.X0.shape
     # data.X0 = np.array([1, 2, 3, 5])
     # data.X1 = np.array([4, 6, 7, 8])
