@@ -128,7 +128,7 @@ def binaryTreeTrain(data, pTree):
 
         weights[k] = w
         errs[k] = min(prior, 1 - prior)
-        hs[k] = max(-4, min(4, .5 * np.log(prior / (1 - prior))))
+        hs[k] = max(-4, min(4, .5 * np.log(prior / (1 - prior + esp))))
 
         if prior < 1e-3 or prior > 1 - 1e-3 or depth[k] >= maxDepth or w < minWeight:
             k = k + 1
@@ -141,7 +141,6 @@ def binaryTreeTrain(data, pTree):
 
         errsSt, thrsSt = binaryTreeTrain1(X0, X1, np.single(wts0 / w), np.single(wts1 / w),
                                           nBins, prior, fidsSt, nThreads)
-        print errsSt, thrsSt
         fid = np.argsort(errsSt)[0]
         thr = np.single(thrsSt[fid] + .5)
         fid = fidsSt[fid]
@@ -157,7 +156,7 @@ def binaryTreeTrain(data, pTree):
             wtsAll0[K] = wts0 * left0.T
             wtsAll0[K + 1] = wts0 * ~left0.T
             wtsAll1[K] = wts1 * left1.T
-            wtsAll1[K + 1] = wts0 * ~left1.T
+            wtsAll1[K + 1] = wts1 * ~left1.T
             depth[K:K+2] = depth[k] + 1
             K = K + 2
         k = k + 1
@@ -215,15 +214,17 @@ def binaryTreeTrain1(X0, X1, wts0, wts1, nBins, prior, fidsSt, nThreads):
 if __name__ == '__main__':
     print 'start ----->'
 
-    # data_src, label = make_blobs(n_samples=1000, n_features=2, centers=2)
-    # plt.scatter(data_src[:, 0], data_src[:, 1], c=label, marker='+')
-    # plt.show()
+    data_src, label = make_blobs(n_samples=1000, n_features=2, centers=2)
+    plt.scatter(data_src[:, 0], data_src[:, 1], c=label, marker='+')
 
     data = pData()
-    data.X0 = np.array([1, 2, 3, 5])
-    data.X1 = np.array([4, 6, 7, 8])
-    data.X0.shape = -1, 1
-    data.X1.shape = -1, 1
+    data.X0 = data_src[label==0]
+    data.X1 = data_src[label==1]
+    print data.X0.shape
+    # data.X0 = np.array([1, 2, 3, 5])
+    # data.X1 = np.array([4, 6, 7, 8])
+    # data.X0.shape = -1, 1
+    # data.X1.shape = -1, 1
     data.wts0 = np.array([], np.float)
     data.wts1 = np.array([], np.float)
     data.xMin = []
@@ -251,5 +252,7 @@ if __name__ == '__main__':
     # fidst = range(1)
 
     tree, data, err = binaryTreeTrain(data, tree)
+
+    plt.show()
 
     print "end<--------"
