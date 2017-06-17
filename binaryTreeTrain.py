@@ -183,7 +183,6 @@ def binaryTreeTrain1(X0, X1, wts0, wts1, nBins, prior, fidsSt, nThreads):
     for f in fidsSt:
         cdf0 = np.zeros((nBins, 1), dtype=np.float)
         cdf1 = np.zeros((nBins, 1), dtype=np.float)
-        thr = 1
         if prior < .5:
             e0 = prior
             e1 = 1 - prior

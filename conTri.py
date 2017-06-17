@@ -43,7 +43,7 @@ def convTri(I, *arg):
 
 if __name__ == '__main__':
     r = 1
-    s = 2
+    s = 3
 
     img = sk_io.imread('peppers.png')
 
