@@ -148,6 +148,7 @@ def binaryTreeTrain(data, Tree):
                                           nBins, prior, fidsSt, nThreads)
         fid = np.argsort(errsSt, axis=0)[0]
         thr = np.single(thrsSt[fid] + .5)
+        # err: converting an array with ndim > 0 to an index will result in an error in the futurer
         fid = fidsSt[fid]
 
         left0 = X0[:, fid] < thr
