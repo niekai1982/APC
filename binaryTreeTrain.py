@@ -45,7 +45,7 @@ class pData(object):
         self.__dict__.update(data)
 
 
-def binaryTreeTrain(data, pTree):
+def binaryTreeTrain(data, Tree):
     """
 
     :type pTree: pTree
@@ -61,11 +61,11 @@ def binaryTreeTrain(data, pTree):
     xType = data.xType
 
     # Initial Tree Struct
-    nBins = pTree.nBins
-    maxDepth = pTree.maxDepth
-    minWeight = pTree.minWeight
-    fracFtrs = pTree.fracFtrs
-    nThreads = pTree.nThreads
+    nBins = Tree.nBins
+    maxDepth = Tree.maxDepth
+    minWeight = Tree.minWeight
+    fracFtrs = Tree.fracFtrs
+    nThreads = Tree.nThreads
 
     # get data and normalize weights
     N0, F = X0.shape
@@ -166,14 +166,14 @@ def binaryTreeTrain(data, pTree):
             K = K + 2
         k = k + 1
     K = K - 1
-    tree.fids = fids[:K + 1]
-    tree.thrs = thrs[:K + 1]
-    tree.child = child[:K + 1]
-    tree.hs = child[:K + 1]
-    tree.weights = weights[:K + 1]
-    tree.depth = depth[:K + 1]
-    err = errs[:K + 1] * tree.weights*(tree.child==0)
-    return tree, data, err
+    Tree.fids = fids[:K + 1]
+    Tree.thrs = thrs[:K + 1]
+    Tree.child = child[:K + 1]
+    Tree.hs = child[:K + 1]
+    Tree.weights = weights[:K + 1]
+    Tree.depth = depth[:K + 1]
+    err = errs[:K + 1] * Tree.weights*(Tree.child==0)
+    return Tree, data, err
 
 
 def binaryTreeTrain1(X0, X1, wts0, wts1, nBins, prior, fidsSt, nThreads):
@@ -229,12 +229,8 @@ if __name__ == '__main__':
     #
     data_src = sio.loadmat("C:/Users/nieka/Desktop/test/src_data.mat")
     data = pData()
-    data.X0 = data_src['data']['X0']
-    data.X1 = data_src['data']['X1']
-
-    print data.X0.shape
-    print data.X1.shape
-
+    data.X0 = data_src['data']['X0'][0,0]
+    data.X1 = data_src['data']['X1'][0,0]
 
     data.wts0 = np.array([], np.float)
     data.wts1 = np.array([], np.float)
@@ -248,7 +244,8 @@ if __name__ == '__main__':
     tree.minWeight = .01
     tree.fracFtrs = 1
     tree.nThreads = 16
+
     #
-    # tree, data, err = binaryTreeTrain(data, tree)
+    tree, data, err = binaryTreeTrain(data, tree)
     #
-    # print "end<--------"
+    print "end<--------"
