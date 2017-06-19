@@ -236,18 +236,18 @@ if __name__ == '__main__':
     print data.X1.shape
 
 
-    # data.wts0 = np.array([], np.float)
-    # data.wts1 = np.array([], np.float)
-    # data.xMin = []
-    # data.xStep = []
-    # data.xType = []
-    #
-    # tree = pTree()
-    # tree.nBins = 256
-    # tree.maxDepth = 2
-    # tree.minWeight = .01
-    # tree.fracFtrs = 1
-    # tree.nThreads = 16
+    data.wts0 = np.array([], np.float)
+    data.wts1 = np.array([], np.float)
+    data.xMin = []
+    data.xStep = []
+    data.xType = []
+
+    tree = pTree()
+    tree.nBins = 256
+    tree.maxDepth = 2
+    tree.minWeight = .01
+    tree.fracFtrs = 1
+    tree.nThreads = 16
     #
     # tree, data, err = binaryTreeTrain(data, tree)
     #
