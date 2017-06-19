@@ -1,6 +1,7 @@
 from sklearn.datasets import make_blobs
 import matplotlib.pyplot as plt
 import numpy as np
+import scipy.io as sio
 from sklearn.datasets import make_gaussian_quantiles
 
 """
@@ -66,6 +67,7 @@ def binaryTreeTrain(data, pTree):
     fracFtrs = pTree.fracFtrs
     nThreads = pTree.nThreads
 
+    # get data and normalize weights
     N0, F = X0.shape
     N1, F1 = X1.shape
     assert F == F1
@@ -88,6 +90,7 @@ def binaryTreeTrain(data, pTree):
         wts0 = wts0 / w
         wts1 = wts1 / w
 
+    # quantize data to be between [0, nBins-1] if not already quantized
     if X0.dtype != np.uint8 or X0.dtype != np.uint8:
         xMin = np.minimum(X0.min(0), X1.min(0)) - .01
         xMax = np.maximum(X0.max(0), X1.max(0)) + .01
@@ -95,6 +98,7 @@ def binaryTreeTrain(data, pTree):
         X0 = np.uint8(np.round((X0 - xMin) / xStep))
         X1 = np.uint8(np.round((X1 - xMin) / xStep))
 
+    # train decision tree classifier
     K = 2 * (N0 + N1)
 
     errs = np.zeros((K, 1), xType)
@@ -214,51 +218,37 @@ def binaryTreeTrain1(X0, X1, wts0, wts1, nBins, prior, fidsSt, nThreads):
 if __name__ == '__main__':
     print 'start ----->'
 
-    data_src, label = make_blobs(n_samples=1000, n_features=2, centers=2)
-    X1, y1 = make_gaussian_quantiles(cov=2., n_samples=200, n_features=2, n_classes=2, random_state=1)
-    X2, y2 = make_gaussian_quantiles(mean=(3, 3), cov=1.5, n_samples=300, n_features=2, n_classes=2, random_state=1)
-    X = np.concatenate((X1, X2))
-    y = np.concatenate((y1, -y2 + 1))
-
-    plt.scatter(X[:, 0], X[:, 1], c=y, marker='+')
-    plt.show()
-
+    # data_src, label = make_blobs(n_samples=1000, n_features=2, centers=2)
+    # X1, y1 = make_gaussian_quantiles(cov=2., n_samples=200, n_features=2, n_classes=2, random_state=1)
+    # X2, y2 = make_gaussian_quantiles(mean=(3, 3), cov=1.5, n_samples=300, n_features=2, n_classes=2, random_state=1)
+    # X = np.concatenate((X1, X2))
+    # y = np.concatenate((y1, -y2 + 1))
+    #
+    # plt.scatter(X[:, 0], X[:, 1], c=y, marker='+')
+    # plt.show()
+    #
+    data_src = sio.loadmat("C:/Users/nieka/Desktop/test/src_data.mat")
     data = pData()
-    data.X0 = X[y==0][:,::-1]
-    data.X1 = X[y==1][:,::-1]
+    data.X0 = data_src['data']['X0']
+    data.X1 = data_src['data']['X1']
+
     print data.X0.shape
-    # data.X0 = np.array([1, 2, 3, 5])
-    # data.X1 = np.array([4, 6, 7, 8])
-    # data.X0.shape = -1, 1
-    # data.X1.shape = -1, 1
-    data.wts0 = np.array([], np.float)
-    data.wts1 = np.array([], np.float)
-    data.xMin = []
-    data.xStep = []
-    data.xType = []
+    print data.X1.shape
 
-    tree = pTree()
-    tree.nBins = 256
-    tree.maxDepth = 2
-    tree.minWeight = .01
-    tree.fracFtrs = 1
-    tree.nThreads = 16
 
-    # X0 = np.array([1, 2, 3, 5])
-    # X1 = np.array([4, 6, 7, 8])
+    # data.wts0 = np.array([], np.float)
+    # data.wts1 = np.array([], np.float)
+    # data.xMin = []
+    # data.xStep = []
+    # data.xType = []
     #
-    # X0.shape = -1, 1
-    # X1.shape = -1, 1
+    # tree = pTree()
+    # tree.nBins = 256
+    # tree.maxDepth = 2
+    # tree.minWeight = .01
+    # tree.fracFtrs = 1
+    # tree.nThreads = 16
     #
-    # nBins = 10
-    # wts0 = np.ones((4, 1)) / 5
-    # wts1 = np.ones((4, 1)) / 5
-    # wts0[:3] = 0
-    # prior = .8
-    # fidst = range(1)
-
-    tree, data, err = binaryTreeTrain(data, tree)
-
-    plt.show()
-
-    print "end<--------"
+    # tree, data, err = binaryTreeTrain(data, tree)
+    #
+    # print "end<--------"

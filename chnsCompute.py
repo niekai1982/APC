@@ -10,7 +10,8 @@ INPUTS
 import cv2
 import numpy as np
 from conTri import convTri
-from getFeature_test import gradient_Mag, gradient_Hist
+from getFeature_test import rgb2luv, gradient_Mag, gradient_Hist
+from time import time
 
 
 # chns struct
@@ -85,7 +86,7 @@ def chnsCompute(I=[], *varargin):
     # compute color channels
     p = pChns.pColor
     nm = 'color channels'
-    I = cv2.cvtColor(I, cv2.COLOR_RGB2LUV)
+    I = rgb2luv(I, 1./255)
     I = convTri(I, p.smooth, 1)
     addChn(chns, I, nm, p, 0, h, w)
 
@@ -93,7 +94,7 @@ def chnsCompute(I=[], *varargin):
     p = pChns.pGradMag
     nm = 'gradient magnitude'
     if pChns.pGradHist.enable:
-        M, O = gradient_Mag(I, cv_flag=1)
+        M, O = gradient_Mag(I, pChns.pGradMag.normRad, pChns.pGradMag.normConst, cv_flag=1)
     addChn(chns, M, nm, p, 0, h, w)
 
     # compute gradent histogram channels
@@ -105,6 +106,7 @@ def chnsCompute(I=[], *varargin):
             binSize = pChns.shrink
     H = gradient_Hist(M, O, binSize, p.nOrients, p.softBin, 0)
     addChn(chns, H, nm, p, 0, h, w)
+
     return chns
 
 
@@ -131,11 +133,10 @@ if __name__ == "__main__":
     from time import time
 
     I = cv2.imread('peppers.png')
-    I = (I * 1. / 255).astype(np.float32)
-
+    # I = (I * 1. / 255).astype(np.float32)
     chns = chnsCompute(I)
 
-    for i in range(chns.nTypes):
-        for j in range(chns.info.nChns[i]):
-            plt.imshow(chns.data[i][j])
-            plt.show()
+    # for i in range(chns.nTypes):
+    #     for j in range(chns.info.nChns[i]):
+    #         plt.imshow(chns.data[i][j])
+    #         plt.show()
