@@ -9,7 +9,7 @@ INPUTS
 
 import cv2
 import numpy as np
-from conTri import convTri
+from imgProc import convTri
 from getFeature_test import rgb2luv, gradient_Mag, gradient_Hist
 from time import time
 

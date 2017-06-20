@@ -35,6 +35,7 @@ INPUTS
 
 esp = 1e-6
 
+
 class pTree(object):
     def __init__(self, **data):
         self.__dict__.update(data)
@@ -133,7 +134,7 @@ def binaryTreeTrain(data, Tree):
 
         weights[k] = w
         errs[k] = min(prior, 1 - prior)
-        hs[k] = max(-4, min(4, .5 * np.log(prior / (1 - prior + esp))))
+        hs[k] = max(-4, min(4, .5 * np.log((prior + esp) / (1 - prior + esp))))
 
         if prior < 1e-3 or prior > 1 - 1e-3 or depth[k] >= maxDepth or w < minWeight:
             k = k + 1
@@ -146,7 +147,8 @@ def binaryTreeTrain(data, Tree):
 
         errsSt, thrsSt = binaryTreeTrain1(X0, X1, np.single(wts0 / w), np.single(wts1 / w),
                                           nBins, prior, fidsSt, nThreads)
-        fid = np.argsort(errsSt, axis=0)[0]
+        # fid = np.argsort(errsSt, axis=0)[0]
+        fid = np.where(errsSt == errsSt.min())[0][0]
         thr = np.single(thrsSt[fid] + .5)
         # err: converting an array with ndim > 0 to an index will result in an error in the futurer
         fid = fidsSt[fid]
@@ -159,21 +161,21 @@ def binaryTreeTrain(data, Tree):
             child[k] = K
             fids[k] = fid
             thrs[k] = thr
-            wtsAll0[K] = wts0 * left0.T
-            wtsAll0[K + 1] = wts0 * ~left0.T
-            wtsAll1[K] = wts1 * left1.T
-            wtsAll1[K + 1] = wts1 * ~left1.T
-            depth[K:K+2] = depth[k] + 1
+            wtsAll0[K] = wts0 * left0.reshape(-1, 1)
+            wtsAll0[K + 1] = wts0 * ~left0.reshape(-1, 1)
+            wtsAll1[K] = wts1 * left1.reshape(-1, 1)
+            wtsAll1[K + 1] = wts1 * ~left1.reshape(-1, 1)
+            depth[K:K + 2] = depth[k] + 1
             K = K + 2
         k = k + 1
     K = K - 1
     Tree.fids = fids[:K + 1]
     Tree.thrs = thrs[:K + 1]
     Tree.child = child[:K + 1]
-    Tree.hs = child[:K + 1]
+    Tree.hs = hs[:K + 1]
     Tree.weights = weights[:K + 1]
     Tree.depth = depth[:K + 1]
-    err = errs[:K + 1] * Tree.weights*(Tree.child==0)
+    err = errs[:K + 1] * Tree.weights * (Tree.child == 0)
     return Tree, data, err
 
 
@@ -188,6 +190,7 @@ def binaryTreeTrain1(X0, X1, wts0, wts1, nBins, prior, fidsSt, nThreads):
     for f in fidsSt:
         cdf0 = np.zeros((nBins, 1), dtype=np.float)
         cdf1 = np.zeros((nBins, 1), dtype=np.float)
+        thr = 0
         if prior < .5:
             e0 = prior
             e1 = 1 - prior
@@ -203,6 +206,8 @@ def binaryTreeTrain1(X0, X1, wts0, wts1, nBins, prior, fidsSt, nThreads):
             cdf1[i] += cdf1[i - 1]
         for i in range(nBins):
             e = prior - cdf1[i] + cdf0[i]
+
+            # err find?
             if (e0 - e) > esp:
                 e0 = e
                 e1 = 1 - e
@@ -211,9 +216,14 @@ def binaryTreeTrain1(X0, X1, wts0, wts1, nBins, prior, fidsSt, nThreads):
                 e0 = 1 - e
                 e1 = e
                 thr = i
+
         errs[f] = e0
         thrs[f] = thr
     return errs, thrs
+
+
+
+
 
 
 if __name__ == '__main__':
@@ -230,8 +240,11 @@ if __name__ == '__main__':
     #
     data_src = sio.loadmat("C:/Users/nieka/Desktop/test/src_data.mat")
     data = pData()
-    data.X0 = data_src['data']['X0'][0,0]
-    data.X1 = data_src['data']['X1'][0,0]
+    data.X0 = data_src['data']['X0'][0, 0][:, :]
+    data.X1 = data_src['data']['X1'][0, 0][:, :]
+
+    print data.X0.shape
+    print data.X1.shape
 
     data.wts0 = np.array([], np.float)
     data.wts1 = np.array([], np.float)

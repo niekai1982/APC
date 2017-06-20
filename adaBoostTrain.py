@@ -1,9 +1,6 @@
-import os
-import cv2
-import matplotlib.pyplot as plt
 import numpy as np
-from get_feature import get_train_data
 import pickle
+from binaryTreeTrain import pTree, pData, binaryTreeTrain
 
 
 class Tree(object):
@@ -33,6 +30,7 @@ def getTrainData(pFilePath, nFilePath):
     return X0, X1
 
 if __name__ == '__main__':
+    import matplotlib.pyplot as plt
     dfs = Adaboost()
     X0, X1 = getTrainData(pFilePath='data1.pkl', nFilePath='data0.pkl')
     data = {}
@@ -48,6 +46,4 @@ if __name__ == '__main__':
     losses = np.zeros((1, dfs.nWeak))
     for i in range(dfs.nWeak):
         pass
-
-
 

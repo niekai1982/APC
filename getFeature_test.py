@@ -1,6 +1,6 @@
 import cv2
 import numpy as np
-from conTri import convTri
+from imgProc import convTri
 from time import time
 
 kernel_x = np.array([[0, 0, 0], [-1. / 2, 0, 1. / 2], [0, 0, 0]])
