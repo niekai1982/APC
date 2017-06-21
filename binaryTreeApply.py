@@ -22,24 +22,39 @@ def forestInds(data, tree):
     N, F = data.shape
 
     child = tree.child.flatten()
-    fids = tree.fids.flatten()
+    fids = tree.fids.flatten() - 1
     thrs = tree.thrs.flatten()
 
     inds = np.zeros((N, 1), dtype=np.int)
 
     for i in range(N):
         k = 0
-        print "idx now is : %d" % i
         while child[k]:
             if data[i, fids[k]] < thrs[k]:
-                k = child[k] - 1
-            else:
                 k = child[k]
+            else:
+                k = child[k] + 1
         inds[i] = k + 1
     return inds.flatten()
 
 
 if __name__ == '__main__':
-    print 'test'
-    print 'test'
-    pass
+    import pickle
+    import scipy.io as sio
+
+    # load binaryTreeModel
+    pkl_file = open('binary_tree_model.pkl', 'rb')
+    tree = pickle.load(pkl_file)
+    pkl_file.close()
+
+    # load test data
+    data_src = sio.loadmat("C:/Users/nieka/Desktop/test/src_data.mat")
+    data = pData()
+    data.X0 = data_src['data']['X0'][0, 0][:, :]
+    data.X1 = data_src['data']['X1'][0, 0][:, :]
+
+    print data.X0.shape
+    print data.X1.shape
+
+    out_test = forestInds(data.X0, tree)
+    print out_test

@@ -228,6 +228,7 @@ def binaryTreeTrain1(X0, X1, wts0, wts1, nBins, prior, fidsSt, nThreads):
 
 if __name__ == '__main__':
     from binaryTreeApply import forestInds
+    import pickle
     print 'start ----->'
 
     # data_src, label = make_blobs(n_samples=1000, n_features=2, centers=2)
@@ -260,8 +261,18 @@ if __name__ == '__main__':
     tree.fracFtrs = 1
     tree.nThreads = 16
 
-    #
+    # train binaryTree
+    print "======= train start ======="
     tree, data, err = binaryTreeTrain(data, tree)
-    #
+    out_put = open('binary_tree_model.pkl','wb')
+    pickle.dump(tree, out_put)
+    out_put.close()
+    print "======= train end ======="
+
+    # print "======= model test ======="
+    # # x = data.X0[2,:]
+    # # x.shape = 1, -1
+    # inds = forestInds(data.X0, tree)
+    # print inds
 
     print "end<--------"
