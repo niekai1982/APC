@@ -1,5 +1,5 @@
 import numpy as np
-from binaryTreeTrain import pTree
+from binaryTreeTrain import pTree, pData
 
 
 def binaryTreeApply(X, tree, maxDepth, minWeight, nThreads):
@@ -18,23 +18,28 @@ def binaryTreeApply(X, tree, maxDepth, minWeight, nThreads):
 
 
 def forestInds(data, tree):
-    # could be optimize
+    # could be optimiz
     N, F = data.shape
 
-    child = tree.child
-    fids = tree.fids
-    thrs = tree.thrs
+    child = tree.child.flatten()
+    fids = tree.fids.flatten()
+    thrs = tree.thrs.flatten()
 
     inds = np.zeros((N, 1), dtype=np.int)
 
     for i in range(N):
         k = 0
+        print "idx now is : %d" % i
         while child[k]:
-            if data[N, fids[k]] < thrs[k]:
+            if data[i, fids[k]] < thrs[k]:
                 k = child[k] - 1
             else:
                 k = child[k]
         inds[i] = k + 1
+    return inds.flatten()
+
 
 if __name__ == '__main__':
+    print 'test'
+    print 'test'
     pass

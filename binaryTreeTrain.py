@@ -227,6 +227,7 @@ def binaryTreeTrain1(X0, X1, wts0, wts1, nBins, prior, fidsSt, nThreads):
 
 
 if __name__ == '__main__':
+    from binaryTreeApply import forestInds
     print 'start ----->'
 
     # data_src, label = make_blobs(n_samples=1000, n_features=2, centers=2)
@@ -262,4 +263,5 @@ if __name__ == '__main__':
     #
     tree, data, err = binaryTreeTrain(data, tree)
     #
+
     print "end<--------"

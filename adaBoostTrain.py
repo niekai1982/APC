@@ -11,12 +11,14 @@ class Tree(object):
         self.fracFtrs = 1
         self.nThreads = 16
 
+
 class Adaboost():
     def __init__(self):
         self.pTree = Tree()
         self.nWeak = 128
         self.discrete = 1
         self.verbose = 1
+
 
 def getTrainData(pFilePath, nFilePath):
     p_dataFile = open(pFilePath, 'rb')
@@ -29,8 +31,10 @@ def getTrainData(pFilePath, nFilePath):
     n_dataFile.close()
     return X0, X1
 
+
 if __name__ == '__main__':
     import matplotlib.pyplot as plt
+
     dfs = Adaboost()
     X0, X1 = getTrainData(pFilePath='data1.pkl', nFilePath='data0.pkl')
     data = {}
@@ -46,4 +50,3 @@ if __name__ == '__main__':
     losses = np.zeros((1, dfs.nWeak))
     for i in range(dfs.nWeak):
         pass
-
