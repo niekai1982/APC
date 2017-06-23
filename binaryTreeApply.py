@@ -22,7 +22,7 @@ def forestInds(data, tree):
     N, F = data.shape
 
     child = tree.child.flatten()
-    fids = tree.fids.flatten() - 1
+    fids = tree.fids.flatten()
     thrs = tree.thrs.flatten()
 
     inds = np.zeros((N, 1), dtype=np.int)
@@ -34,8 +34,8 @@ def forestInds(data, tree):
                 k = child[k]
             else:
                 k = child[k] + 1
-        inds[i] = k + 1
-    return inds.flatten()
+        inds[i] = k
+    return tree.hs[inds.flatten()]
 
 
 if __name__ == '__main__':

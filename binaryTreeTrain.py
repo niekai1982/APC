@@ -176,7 +176,7 @@ def binaryTreeTrain(data, Tree):
     Tree.weights = weights[:K + 1]
     Tree.depth = depth[:K + 1]
     err = errs[:K + 1] * Tree.weights * (Tree.child == 0)
-    return Tree, data, err
+    return Tree, data, err.sum()
 
 
 def binaryTreeTrain1(X0, X1, wts0, wts1, nBins, prior, fidsSt, nThreads):
