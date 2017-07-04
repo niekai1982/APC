@@ -222,10 +222,6 @@ def binaryTreeTrain1(X0, X1, wts0, wts1, nBins, prior, fidsSt, nThreads):
     return errs, thrs
 
 
-
-
-
-
 if __name__ == '__main__':
     from binaryTreeApply import forestInds
     import pickle
