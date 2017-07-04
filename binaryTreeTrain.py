@@ -81,7 +81,7 @@ def binaryTreeTrain(data, Tree):
     assert wts0.dtype == np.float
     assert wts0.dtype == np.float
 
-    if not wts0:
+    if not np.any(wts0.shape) or not np.any(wts1.shape):
         wts0 = np.ones((N0, 1)) / N0
         wts1 = np.ones((N1, 1)) / N1
 
