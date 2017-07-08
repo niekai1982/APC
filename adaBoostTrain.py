@@ -2,6 +2,8 @@ import numpy as np
 from binaryTreeTrain import pTree, pData, binaryTreeTrain
 from binaryTreeApply import forestInds
 import cPickle
+import copy
+from time import time
 
 
 class pBoost(object):
@@ -39,7 +41,10 @@ def adaBoostTrain(data, boost):
     # main loop
     for i in range(nWeak):
         # train tree and classify each example
+        start = time()
         tree, data, err = binaryTreeTrain(data, tree)
+        end = time()
+        print "binaryTreeTrain spend time = %f" % (end - start)
         if discrete:
             tree.hs = (tree.hs > 0) * 2 - 1
         h0 = forestInds(X0, tree)
@@ -62,7 +67,7 @@ def adaBoostTrain(data, boost):
         data.wts1 = np.exp(-H1) / N1 / 2
         loss = data.wts0.sum() + data.wts1.sum()
 
-        trees.append(tree)
+        trees.append(copy.copy(tree))
         errs[0, i] = err
         losses[0, i] = loss
 
@@ -94,7 +99,7 @@ def adaBoostTrain(data, boost):
         T = trees[i]
         k = T.fids.shape[0]
         model.fids[:k,i] = T.fids.T
-        model.thrs[:k, i] = T.hs.T
+        model.thrs[:k, i] = T.thrs.T
         model.child[:k, i] = T.child.T
         model.hs[:k, i] = T.hs.T
         model.weights[:k, i] = T.weights.T
@@ -113,9 +118,13 @@ if __name__ == '__main__':
     import scipy.io as sio
 
     # load test data
+    # data_test_X0 = sio.loadmat("C:/Users/nieka/Desktop/test/data_test_X0.mat")
+    # data_test_X1 = sio.loadmat("C:/Users/nieka/Desktop/test/data_test_X1.mat")
     data_src = sio.loadmat("C:/Users/nieka/Desktop/test/src_data.mat")
 
     data = pData()
+    # data.X0 = data_test_X0['X0']
+    # data.X1 = data_test_X1['X1']
     data.X0 = data_src['data']['X0'][0, 0][:, :]
     data.X1 = data_src['data']['X1'][0, 0][:, :]
     data.wts0 = np.array([], np.float)
@@ -127,7 +136,7 @@ if __name__ == '__main__':
     # init boost param
     boost = pBoost()
 
-    boost.nWeak = 5
+    boost.nWeak = 2
     boost.discrete = 1
     boost.verbose = 16
 
@@ -139,7 +148,10 @@ if __name__ == '__main__':
     boost.tree.fracFtrs = 1
     boost.tree.nThreads = 16
 
+    start = time()
     model = adaBoostTrain(data, boost)
+    end = time()
+    print "adaBoostTrain spend time = %f" % (end - start)
 
     with open('model.pkl', 'wb') as fp:
         cPickle.dump(model, fp)

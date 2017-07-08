@@ -2,6 +2,7 @@ from sklearn.datasets import make_blobs
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy.io as sio
+from time import time
 from sklearn.datasets import make_gaussian_quantiles
 
 """
@@ -145,8 +146,12 @@ def binaryTreeTrain(data, Tree):
         if fracFtrs < 1:
             fidsSt = np.random.permutation(F)[:int(np.floor(F * fracFtrs))]
 
+        start = time()
         errsSt, thrsSt = binaryTreeTrain1(X0, X1, np.single(wts0 / w), np.single(wts1 / w),
                                           nBins, prior, fidsSt, nThreads)
+        end = time()
+        print "binaryTreeTrain1 spend time = %f" % (end - start)
+
         # fid = np.argsort(errsSt, axis=0)[0]
         fid = np.where(errsSt == errsSt.min())[0][0]
         thr = np.single(thrsSt[fid] + .5)
@@ -197,6 +202,7 @@ def binaryTreeTrain1(X0, X1, wts0, wts1, nBins, prior, fidsSt, nThreads):
         else:
             e0 = 1 - prior
             e1 = prior
+
         for i in range(N0):
             cdf0[X0[i, f]] += wts0[i]
         for i in range(N1):
