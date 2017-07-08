@@ -92,7 +92,7 @@ def binaryTreeTrain(data, Tree):
         wts0 = wts0 / w
         wts1 = wts1 / w
 
-    start = time()
+    start = time(  )
     # quantize data to be between [0, nBins-1] if not already quantized
     if X0.dtype != np.uint8 or X0.dtype != np.uint8:
         xMin = np.minimum(X0.min(0), X1.min(0)) - .01
