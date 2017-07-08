@@ -92,6 +92,7 @@ def binaryTreeTrain(data, Tree):
         wts0 = wts0 / w
         wts1 = wts1 / w
 
+    start = time()
     # quantize data to be between [0, nBins-1] if not already quantized
     if X0.dtype != np.uint8 or X0.dtype != np.uint8:
         xMin = np.minimum(X0.min(0), X1.min(0)) - .01
@@ -99,6 +100,10 @@ def binaryTreeTrain(data, Tree):
         xStep = (xMax - xMin) / (nBins - 1)
         X0 = np.uint8(np.round((X0 - xMin) / xStep))
         X1 = np.uint8(np.round((X1 - xMin) / xStep))
+    end = time()
+    print "compute max spend time = %f" % (end - start)
+
+    start = time()
 
     # train decision tree classifier
     K = 2 * (N0 + N1)
@@ -146,11 +151,8 @@ def binaryTreeTrain(data, Tree):
         if fracFtrs < 1:
             fidsSt = np.random.permutation(F)[:int(np.floor(F * fracFtrs))]
 
-        start = time()
         errsSt, thrsSt = binaryTreeTrain1(X0, X1, np.single(wts0 / w), np.single(wts1 / w),
                                           nBins, prior, fidsSt, nThreads)
-        end = time()
-        print "binaryTreeTrain1 spend time = %f" % (end - start)
 
         # fid = np.argsort(errsSt, axis=0)[0]
         fid = np.where(errsSt == errsSt.min())[0][0]
@@ -181,6 +183,8 @@ def binaryTreeTrain(data, Tree):
     Tree.weights = weights[:K + 1]
     Tree.depth = depth[:K + 1]
     err = errs[:K + 1] * Tree.weights * (Tree.child == 0)
+    end = time()
+    print "binaryTreeTrain1 spend time = %f" % (end - start)
     return Tree, data, err.sum()
 
 
@@ -193,6 +197,7 @@ def binaryTreeTrain1(X0, X1, wts0, wts1, nBins, prior, fidsSt, nThreads):
     thrs = np.empty((F, 1), dtype=np.uint8)
 
     for f in fidsSt:
+        # original code
         cdf0 = np.zeros((nBins, 1), dtype=np.float)
         cdf1 = np.zeros((nBins, 1), dtype=np.float)
         thr = 0
@@ -203,13 +208,25 @@ def binaryTreeTrain1(X0, X1, wts0, wts1, nBins, prior, fidsSt, nThreads):
             e0 = 1 - prior
             e1 = prior
 
-        for i in range(N0):
-            cdf0[X0[i, f]] += wts0[i]
-        for i in range(N1):
-            cdf1[X1[i, f]] += wts1[i]
-        for i in range(1, nBins):
-            cdf0[i] += cdf0[i - 1]
-            cdf1[i] += cdf1[i - 1]
+        # original code
+        # for i in range(N0):
+        #     cdf0[X0[i, f]] += wts0[i]
+        # for i in range(N1):
+        #     cdf1[X1[i, f]] += wts1[i]
+
+        # optimal code 10 times faster
+        cdf0,_ = np.histogram(X0[:,f].reshape(-1, 1), bins=nBins, range=(0, 255), weights=wts0)
+        cdf1,_ = np.histogram(X1[:,f].reshape(-1, 1), bins=nBins, range=(0, 255), weights=wts1)
+
+        # original code
+        # for i in range(1, nBins):
+        #     cdf0[i] += cdf0[i - 1]
+        #     cdf1[i] += cdf1[i - 1]
+
+        # optimal code
+        cdf0 = np.cumsum(cdf0)
+        cdf1 = np.cumsum(cdf1)
+
         for i in range(nBins):
             e = prior - cdf1[i] + cdf0[i]
 

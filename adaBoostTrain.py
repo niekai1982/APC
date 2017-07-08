@@ -44,7 +44,8 @@ def adaBoostTrain(data, boost):
         start = time()
         tree, data, err = binaryTreeTrain(data, tree)
         end = time()
-        print "binaryTreeTrain spend time = %f" % (end - start)
+        print "binaryTreeTrain per weak spend time = %f" % (end - start)
+
         if discrete:
             tree.hs = (tree.hs > 0) * 2 - 1
         h0 = forestInds(X0, tree)
@@ -78,6 +79,7 @@ def adaBoostTrain(data, boost):
             nWeak = i
             print "stopping early"
             break
+
 
     # create output model struct
     k = 0
@@ -118,15 +120,15 @@ if __name__ == '__main__':
     import scipy.io as sio
 
     # load test data
-    # data_test_X0 = sio.loadmat("C:/Users/nieka/Desktop/test/data_test_X0.mat")
-    # data_test_X1 = sio.loadmat("C:/Users/nieka/Desktop/test/data_test_X1.mat")
-    data_src = sio.loadmat("C:/Users/nieka/Desktop/test/src_data.mat")
+    data_test_X0 = sio.loadmat("C:/Users/nieka/Desktop/test/data_test_X0.mat")
+    data_test_X1 = sio.loadmat("C:/Users/nieka/Desktop/test/data_test_X1.mat")
+    # data_src = sio.loadmat("C:/Users/nieka/Desktop/test/src_data.mat")
 
     data = pData()
-    # data.X0 = data_test_X0['X0']
-    # data.X1 = data_test_X1['X1']
-    data.X0 = data_src['data']['X0'][0, 0][:, :]
-    data.X1 = data_src['data']['X1'][0, 0][:, :]
+    data.X0 = data_test_X0['X0'][:, :]
+    data.X1 = data_test_X1['X1'][:, :]
+    # data.X0 = data_src['data']['X0'][0, 0][:, :]
+    # data.X1 = data_src['data']['X1'][0, 0][:, :]
     data.wts0 = np.array([], np.float)
     data.wts1 = np.array([], np.float)
     data.xMin = []
@@ -136,7 +138,7 @@ if __name__ == '__main__':
     # init boost param
     boost = pBoost()
 
-    boost.nWeak = 2
+    boost.nWeak = 128
     boost.discrete = 1
     boost.verbose = 16
 
