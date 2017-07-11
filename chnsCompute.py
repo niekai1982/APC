@@ -87,7 +87,7 @@ def chnsCompute(I=[], *varargin):
     p = pChns.pColor
     nm = 'color channels'
     I = rgb2luv(I, 1./255)
-    I = convTri(I, p.smooth, 1)
+    _,I = convTri(I, p.smooth, 1)
     addChn(chns, I, nm, p, 0, h, w)
 
     # compute gradMag channels
@@ -134,7 +134,10 @@ if __name__ == "__main__":
 
     I = cv2.imread('peppers.png')
     # I = (I * 1. / 255).astype(np.float32)
+    start = time()
     chns = chnsCompute(I)
+    end = time()
+    print (end - start)
 
     # for i in range(chns.nTypes):
     #     for j in range(chns.info.nChns[i]):

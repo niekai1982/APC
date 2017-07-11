@@ -112,7 +112,7 @@ def gradient_Mag(img, normRad, normConst, cv_flag):
             for j in range(img.shape[1]):
                 M_out[i, j] = M[i, j, max_idx[i, j]]
                 O_out[i, j] = O[i, j, max_idx[i, j]]
-        S = convTri(M_out, normRad)
+        _,S = convTri(M_out, normRad)
         M_out = M_out / (S + normConst)
         return  M_out, O_out
     else:
