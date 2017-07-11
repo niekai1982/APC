@@ -30,7 +30,7 @@ if __name__ == '__main__':
     cor_file_name = 'D:/data_sample/hiv00000_19196.jpg.txt'
     img_file_name = 'D:/data_sample/hiv00000_19196.jpg'
 
-    scale = 0.25
+    scale = 2
 
     wins_rect = sampleWins(cor_file_name)
 
