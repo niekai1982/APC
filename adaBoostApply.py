@@ -26,7 +26,7 @@ def forestInds(data, thrs, fids, child):
 
 
 def adaBoostApply(data, model):
-    nWeak = 256
+    nWeak = 128
 
     N, F = data.shape
 

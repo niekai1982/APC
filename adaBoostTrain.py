@@ -41,10 +41,10 @@ def adaBoostTrain(data, boost):
     # main loop
     for i in range(nWeak):
         # train tree and classify each example
-        start = time()
+        # start = time()
         tree, data, err = binaryTreeTrain(data, tree)
-        end = time()
-        print "binaryTreeTrain per weak spend time = %f" % (end - start)
+        # end = time()
+        # print "binaryTreeTrain per weak spend time = %f" % (end - start)
 
         if discrete:
             tree.hs = (tree.hs > 0) * 2 - 1
@@ -120,15 +120,15 @@ if __name__ == '__main__':
     import scipy.io as sio
 
     # load test data
-    # data_test_X0 = sio.loadmat("C:/Users/nieka/Desktop/test/data_test_X0.mat")
-    # data_test_X1 = sio.loadmat("C:/Users/nieka/Desktop/test/data_test_X1.mat")
-    data_src = sio.loadmat("C:/Users/nieka/Desktop/test/src_data.mat")
+    data_test_X0 = sio.loadmat("D:/test/X0.mat")
+    data_test_X1 = sio.loadmat("D:/test/X1.mat")
+    # data_src = sio.loadmat("C:/Users/nieka/Desktop/test/src_data.mat")
 
     data = pData()
-    # data.X0 = data_test_X0['X0'][:, :]
-    # data.X1 = data_test_X1['X1'][:, :]
-    data.X0 = data_src['data']['X0'][0, 0][:, :]
-    data.X1 = data_src['data']['X1'][0, 0][:, :]
+    data.X0 = data_test_X0['X0'][:, :]
+    data.X1 = data_test_X1['X1'][:, :]
+    # data.X0 = data_src['data']['X0'][0, 0][:, :]
+    # data.X1 = data_src['data']['X1'][0, 0][:, :]
     data.wts0 = np.array([], np.float)
     data.wts1 = np.array([], np.float)
     data.xMin = []
@@ -138,7 +138,7 @@ if __name__ == '__main__':
     # init boost param
     boost = pBoost()
 
-    boost.nWeak = 256
+    boost.nWeak = 128
     boost.discrete = 1
     boost.verbose = 16
 

@@ -92,7 +92,7 @@ def binaryTreeTrain(data, Tree):
         wts0 = wts0 / w
         wts1 = wts1 / w
 
-    start = time(  )
+    # start = time(  )
     # quantize data to be between [0, nBins-1] if not already quantized
     if X0.dtype != np.uint8 or X0.dtype != np.uint8:
         xMin = np.minimum(X0.min(0), X1.min(0)) - .01
@@ -100,10 +100,10 @@ def binaryTreeTrain(data, Tree):
         xStep = (xMax - xMin) / (nBins - 1)
         X0 = np.uint8(np.round((X0 - xMin) / xStep))
         X1 = np.uint8(np.round((X1 - xMin) / xStep))
-    end = time()
-    print "compute max spend time = %f" % (end - start)
+    # end = time()
+    # print "compute max spend time = %f" % (end - start)
 
-    start = time()
+    # start = time()
 
     # train decision tree classifier
     K = 2 * (N0 + N1)
@@ -183,8 +183,8 @@ def binaryTreeTrain(data, Tree):
     Tree.weights = weights[:K + 1]
     Tree.depth = depth[:K + 1]
     err = errs[:K + 1] * Tree.weights * (Tree.child == 0)
-    end = time()
-    print "binaryTreeTrain1 spend time = %f" % (end - start)
+    # end = time()
+    # print "binaryTreeTrain1 spend time = %f" % (end - start)
     return Tree, data, err.sum()
 
 
