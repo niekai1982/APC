@@ -45,14 +45,14 @@ if __name__ == '__main__':
         fp.close()
 
     modelDS = [256, 256] # h, w
-    step = [8, 8] # h, w
+    step = [4, 4] # h, w
     shrink = 4
 
     img = cv2.imread('hiv00000_06960.jpg')
     img = img[:,:,::-1]
     h, w = img.shape[:2]
 
-    scale = 0.5
+    scale = 1.2
     w = int(w * scale)
     h = int(h * scale)
     img = cv2.resize(img, (w, h))

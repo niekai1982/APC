@@ -10,7 +10,7 @@ INPUTS
 import cv2
 import numpy as np
 from imgProc import convTri
-from getFeature_test import rgb2luv, gradient_Mag, gradient_Hist
+from getFeature_test import rgb2luv, gradient_Mag, gradient_Hist, rgb2luv_test
 from time import time
 
 
@@ -84,20 +84,27 @@ def chnsCompute(I=[], *varargin):
     w /= shrink
 
     # compute color channels
+    start = time()
     p = pChns.pColor
     nm = 'color channels'
-    I = rgb2luv(I, 1./255)
+    I = rgb2luv_test(I, 1./255)
     _,I = convTri(I, p.smooth, 1)
     addChn(chns, I, nm, p, 0, h, w)
+    end = time()
+    print end - start
 
     # compute gradMag channels
+    start = time()
     p = pChns.pGradMag
     nm = 'gradient magnitude'
     if pChns.pGradHist.enable:
         M, O = gradient_Mag(I, pChns.pGradMag.normRad, pChns.pGradMag.normConst, cv_flag=1)
     addChn(chns, M, nm, p, 0, h, w)
+    end = time()
+    print end - start
 
     # compute gradent histogram channels
+    start = time()
     p = pChns.pGradHist
     nm = 'gradient histogram'
     if pChns.pGradHist.enable:
@@ -106,6 +113,8 @@ def chnsCompute(I=[], *varargin):
             binSize = pChns.shrink
     H = gradient_Hist(M, O, binSize, p.nOrients, p.softBin, 0)
     addChn(chns, H, nm, p, 0, h, w)
+    end = time()
+    print end - start
 
     return chns
 
@@ -132,7 +141,7 @@ if __name__ == "__main__":
     import matplotlib.pyplot as plt
     from time import time
 
-    I = cv2.imread('peppers.png')
+    I = cv2.imread('hiv00000_06960.jpg')
     # I = (I * 1. / 255).astype(np.float32)
     start = time()
     chns = chnsCompute(I)

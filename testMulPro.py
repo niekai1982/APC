@@ -1,7 +1,16 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Thu Jul 13 18:12:20 2017
+
+@author: nieka
+"""
+
 import cv2
 import numpy as np
-from imgProc import convTri
 from time import time
+from multiprocessing import Process
+from multiprocessing import Pool
+
 
 kernel_x = np.array([[0, 0, 0], [-1. / 2, 0, 1. / 2], [0, 0, 0]])
 kernel_y = np.array([[0, -1. / 2, 0], [0, 0, 0], [0, 1. / 2, 0]])
@@ -48,7 +57,6 @@ def rgb2luv_setup(nrm):
     lInit = True
     return lTable, mr, mg, mb, minu, minv, un, vn
 
-
 def rgb2luv(I, nrm):
     lTable, mr, mg, mb, minu, minv, un, vn = rgb2luv_setup(nrm)
     B, G, R = np.dsplit(I, 3)
@@ -77,6 +85,9 @@ def rgb2luv(I, nrm):
 def rgb2luv_test(I, nrm):
     lTable, mr, mg, mb, minu, minv, un, vn = rgb2luv_setup(nrm)
     B, G, R = np.dsplit(I, 3)
+    L = np.zeros_like(B, dtype=np.float64)
+    U = np.zeros_like(G, dtype=np.float64)
+    V = np.zeros_like(R, dtype=np.float64)
 
     X = mr[0] * R + mg[0] * G + mb[0] * B
     Y = mr[1] * R + mg[1] * G + mb[1] * B
@@ -91,104 +102,28 @@ def rgb2luv_test(I, nrm):
 
 def gradient(img, cv_flag):
     h, w = img.shape[:2]
-    if cv_flag:
-        Gx = cv2.filter2D(img, -1, kernel_x)
-        Gy = cv2.filter2D(img, -1, kernel_y)
-
-        Gy[0, :] = img[1, :] - img[0, :]
-        Gy[h - 1, :] = img[h - 1, :] - img[h - 2, :]
-        Gx[:, 0] = img[:, 1] - img[:, 0]
-        Gx[:, w - 1] = img[:, w - 1] - img[:, w - 2]
-    else:
-        Gy, Gx = np.gradient(img, 1, axis=(0, 1))
-    return Gx, Gy
-
-
-def gradient_Mag(img, normRad, normConst, cv_flag):
-    if (len(img.shape) > 2):
-        c = img.shape[-1]
-    else:
-        c = 1
-    if cv_flag:
-        Gx, Gy = gradient(img, cv_flag)
-        M, O = cv2.cartToPolar(Gx, Gy, angleInDegrees=False)
-        O[O > np.pi] -= np.pi
-    else:
-        Gx, Gy = gradient(img, cv_flag)
-        M = np.sqrt(Gx ** 2 + Gy ** 2)
-        O = np.arctan2(Gy, Gx)
-    if c > 1:
-        max_idx = np.argmax(M, axis=2)
-        M_out = np.zeros(img.shape[:2])
-        O_out = np.zeros(img.shape[:2])
-        for i in range(img.shape[0]):
-            for j in range(img.shape[1]):
-                M_out[i, j] = M[i, j, max_idx[i, j]]
-                O_out[i, j] = O[i, j, max_idx[i, j]]
-        _,S = convTri(M_out, normRad)
-        M_out = M_out / (S + normConst)
-        return  M_out, O_out
-    else:
-        M = convTri(M, normRad)
-        M = M / (M + normConst)
-        return M, O
-
-
-def gradient_Hist(M, O, bin, nOrients, softBin, full):
-    h, w = M.shape
-    nb = w * h
-    s = 1. * bin
-    sInv2 = 1 / s / s
-    oMult = nOrients / (2 * np.pi) if full else nOrients / np.pi
-    oMax = nOrients * nb
-
-    o = O * oMult
-    o0 = o.astype(dtype=np.int)
-    od = o - o0
-    o0 *= nb
-    o0[o0 >= oMax] = 0
-    O0 = o0.copy()
-
-    o1 = o0 + nb
-    o1[o1 == oMax] = 0
-    O1 = o1.copy()
-    m = M * sInv2
-    M1 = od * m
-    M0 = m - M1
-
-    O0 = O0.flatten()
-    O1 = O1.flatten()
-    M0 = M0.flatten()
-    M1 = M1.flatten()
-
-    ord_t = np.arange(w * h)
-
-    O0 += ord_t
-    O1 += ord_t
-
-    H = np.zeros(h * w * nOrients, dtype=np.float64)
-
-    for elem in range(O0.shape[0]):
-        H[O0[elem]] += M0[elem]
-        H[O1[elem]] += M1[elem]
-
-    H.shape = nOrients, h, w
-
-    H1 = np.zeros((h / bin, w / bin, nOrients))
-
-    for i in range(h / bin):
-        for j in range(w / bin):
-            for k in range(nOrients):
-                H1[i, j, k] = H[k, i * bin:(i + 1) * bin, j * bin:(j + 1) * bin].sum()
-    return H1
-
+    # print h
+    #print h
+#   cv2.filter2D(img, -1, kernel_x))
+    for i in range(1000):
+        cv2.filter2D(img, -1, kernel_y)
+        
+#        Gy[0, :] = img[1, :] - img[0, :]
+#        Gy[h - 1, :] = img[h - 1, :] - img[h - 2, :]
+#        Gx[:, 0] = img[:, 1] - img[:, 0]
+#        Gx[:, w - 1] = img[:, w - 1] - img[:, w - 2]
+#    else:
+#        Gy, Gx = np.gradient(img, 1, axis=(0, 1))
+#    return Gx, Gy
 
 if __name__ == '__main__':
-    import os
-    import scipy.io as sio
-    import profile
-    import matplotlib.pyplot as plt
-    from time import time
-
-    img = cv2.imread('peppers.png')
-    luv = rgb2luv(img, 1.0 / 255)
+    img = cv2.imread('hiv00000_06960.jpg')
+    img = cv2.resize(img, (200, 100))
+    start = time()
+    out = rgb2luv(img, 1./255)
+    end = time()
+    print end - start
+    start = time()
+    out1 = rgb2luv_test(img, 1./255)
+    end = time()
+    print end - start
