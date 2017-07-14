@@ -1,9 +1,9 @@
 import numpy as np
-from adaBoostTrain import pModel
-from binaryTreeTrain import pData
-from chnsCompute import chnsCompute
-from chnsCompute import C_chns
+
 from adaBoostApply import adaBoostApply
+from adaBoostTrain import pModel
+from chnsCompute import C_chns
+from chnsCompute import chnsCompute
 
 
 def getChild(data, fids, thrs, k):
@@ -30,7 +30,6 @@ def acfDetect(data, clf, shrink=4, modelDsPad=(64, 64), stride=4, cascThr=0.001)
 
 if __name__ == '__main__':
     import cPickle
-    import scipy.io as sio
     import matplotlib.pyplot as plt
     import cv2
     from time import time
@@ -45,7 +44,7 @@ if __name__ == '__main__':
         fp.close()
 
     modelDS = [256, 256] # h, w
-    step = [4, 4] # h, w
+    step = [8, 8] # h, w
     shrink = 4
 
     img = cv2.imread('hiv00000_06960.jpg')
