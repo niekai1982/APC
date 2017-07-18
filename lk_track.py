@@ -28,7 +28,7 @@ from common import anorm2, draw_str
 from time import clock
 import os
 
-lk_params = dict( winSize  = (15, 15),
+lk_params = dict( winSize  = (5, 5),
                   maxLevel = 2,
                   criteria = (cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 0.03))
 
@@ -91,7 +91,7 @@ class App:
                 break
     def run_file(self):
         for img_file in os.listdir('.'):
-            scale = 4
+            scale = 2
             frame = cv2.imread(img_file)
             frame = cv2.resize(frame, (frame.shape[1] / scale, frame.shape[0] / scale))
 

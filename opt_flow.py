@@ -22,6 +22,8 @@ import video
 import os
 import matplotlib.pyplot as plt
 from time import time
+import cPickle
+import matplotlib.pyplot as plt
 
 
 def draw_flow(img, flow, step=16):
@@ -67,7 +69,7 @@ if __name__ == '__main__':
 
     img_files = os.listdir('.')
 
-    scale = 2
+    scale = 1
 
 
     prev = cv2.imread(img_files[0])
@@ -88,8 +90,21 @@ if __name__ == '__main__':
         end = time()
         print(end - start)
         prevgray = gray
+        previmg = img
 
         cv2.imshow('flow', draw_flow(gray, flow))
+        # gx = flow[:,:,0]
+        # gy = flow[:,:,1]
+        # grident = gx * gx + gy * gy
+        # out = (grident > 10) * 255
+        # out = out.astype(np.uint8)
+        # plt.imshow(out)
+        # plt.colorbar()
+        # plt.show()
+        # out = out.astype(np.uint8)
+        # cv2.imshow('test', out)
+        # plt.imshow(flow[:,:,0] * flow[:,:,0] + flow[:,:,1] * flow[:,:,1])
+        # plt.show()
         if show_hsv:
             cv2.imshow('flow HSV', draw_hsv(flow))
         if show_glitch:
@@ -107,4 +122,11 @@ if __name__ == '__main__':
             if show_glitch:
                 cur_glitch = img.copy()
             print('glitch is', ['off', 'on'][show_glitch])
+        if ch == ord('s'):
+            with open('flow.pkl', 'wb') as fp:
+                cPickle.dump(flow, fp)
+                fp.close()
+            cv2.imwrite('previmg.jpg', previmg)
+            cv2.imwrite('img.jpg', img)
+            print('save flow success')
     cv2.destroyAllWindows()
