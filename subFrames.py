@@ -12,12 +12,12 @@ if __name__ == '__main__':
     import sys
     print(__doc__)
 
-    file_path = 'C:/Users/nieka/Desktop/test_flow/data'
+    file_path = 'D:/TEST_DATA/test_flow/data'
     os.chdir(file_path)
 
     img_files = os.listdir('.')
 
-    scale = 2
+    scale = 1
 
     prev = cv2.imread(img_files[0])
     prev = cv2.resize(prev, (prev.shape[1] / scale, prev.shape[0] / scale))
@@ -26,10 +26,12 @@ if __name__ == '__main__':
     show_glitch = False
     cur_glitch = prev.copy()
 
-    for i in range(len(img_files)):
+    i = 4
+    while i < len(img_files):
         img = cv2.imread(img_files[i])
         img = cv2.resize(img, (img.shape[1] / scale, img.shape[0] / scale))
 
+        i += 4
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         gray = cv2.GaussianBlur(gray, (3,3), 3)
 
@@ -52,7 +54,7 @@ if __name__ == '__main__':
 
         cv2.imshow('flow', out)
         #
-        ch = 0xFF & cv2.waitKey(5)
+        ch = 0xFF & cv2.waitKey(1000)
         if ch == 27:
             break
         # if ch == ord('1'):

@@ -142,7 +142,7 @@ def main():
     try:
         video_src = sys.argv[1]
     except:
-        video_src = 'C:/Users/nieka/Desktop/test_flow/data'
+        video_src = 'D:/TEST_DATA/test_flow/data'
 
     print(__doc__)
     os.chdir(video_src)

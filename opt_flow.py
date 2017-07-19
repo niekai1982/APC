@@ -38,6 +38,28 @@ def draw_flow(img, flow, step=16):
         cv2.circle(vis, (x1, y1), 1, (0, 255, 0), -1)
     return vis
 
+def draw_motion(img_src, img_re, flow, scale, step=16):
+    h, w = img_re.shape[:2]
+    y, x = np.mgrid[step/2:h:step, step/2:w:step].reshape(2,-1).astype(int)
+    # fy, fx = flow[y,x].T
+    vis = img_src.copy()
+    for (i, j) in zip(y, x):
+        fy, fx = flow[i,j]
+        g = fx ** 2 + fy ** 2
+        if g > 1:
+            vis[i*scale:(i+step)*scale, j*scale:(j+step)*scale,2] = 255
+    # plt.imshow(vis)
+    # plt.show()
+
+
+    # lines = np.vstack([x, y, x+fx, y+fy]).T.reshape(-1, 2, 2)
+    # lines = np.int32(lines + 0.5)
+    # vis = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
+    # cv2.polylines(vis, lines, 0, (0, 255, 0))
+    # for (x1, y1), (x2, y2) in lines:
+    #     cv2.circle(vis, (x1, y1), 1, (0, 255, 0), -1)
+    return vis
+
 
 def draw_hsv(flow):
     h, w = flow.shape[:2]
@@ -69,7 +91,7 @@ if __name__ == '__main__':
 
     img_files = os.listdir('.')
 
-    scale = 1
+    scale = 8
 
     prev = cv2.imread(img_files[0])
     prev = cv2.resize(prev, (prev.shape[1] / scale, prev.shape[0] / scale))
@@ -78,11 +100,13 @@ if __name__ == '__main__':
     show_glitch = False
     cur_glitch = prev.copy()
 
-    for i in range(len(img_files)):
+    i = 2
+    while i  < len(img_files):
         img = cv2.imread(img_files[i])
-        img = cv2.resize(img, (img.shape[1] / scale, img.shape[0] / scale))
+        i += 2
+        img_r = cv2.resize(img, (img.shape[1] / scale, img.shape[0] / scale))
 
-        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        gray = cv2.cvtColor(img_r, cv2.COLOR_BGR2GRAY)
 
         start = time()
         flow = cv2.calcOpticalFlowFarneback(prevgray, gray, None, 0.5, 3, 15, 3, 5, 1.2, 0)
@@ -91,7 +115,10 @@ if __name__ == '__main__':
         prevgray = gray
         previmg = img
 
-        cv2.imshow('flow', draw_flow(gray, flow))
+        vis = draw_motion(img, img_r, flow, scale)
+
+        cv2.imshow('flow', vis)
+        # cv2.imshow('flow', draw_flow(gray, flow))
         # gx = flow[:,:,0]
         # gy = flow[:,:,1]
         # grident = gx * gx + gy * gy
@@ -110,7 +137,7 @@ if __name__ == '__main__':
             cur_glitch = warp_flow(cur_glitch, flow)
             cv2.imshow('glitch', cur_glitch)
 
-        ch = 0xFF & cv2.waitKey(5)
+        ch = 0xFF & cv2.waitKey(1)
         if ch == 27:
             break
         if ch == ord('1'):
