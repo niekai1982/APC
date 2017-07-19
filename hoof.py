@@ -18,10 +18,14 @@ def hof(flow):
 
 
 if __name__ == '__main__':
-    with open('./data/flow_data/flow_187.pkl', 'rb') as fp:
+    with open('./data/flow_data/flow_30.pkl', 'rb') as fp:
         flow = cPickle.load(fp)
         fp.close()
-    img = cv2.imread('./data/flow_data/img_187.jpg')
+    img = cv2.imread('./data/flow_data/img_30.jpg')
+    img_prev = cv2.imread('./data/flow_data/previmg_30.jpg')
+
+    plt.imshow(img)
+    plt.show()
 
     # print flow.shape
     #
@@ -31,23 +35,23 @@ if __name__ == '__main__':
     #
     # num_orients = 2
 
-    M, O = hof(flow)
-
-    plt.imshow(M)
-    plt.colorbar()
-    plt.show()
-
-    h, w = M.shape
-    step = 128
-
-    y, x = np.mgrid[0:h:step, 0:w:step].reshape(2,-1).astype(int)
-    for (i, j) in zip(y, x):
-        val = M[i:(i + step), j:(j + step)].sum()
-        if val > 5 * 128 * 128:
-            img[i:(i + step), j:(j + step),0] = 255
-
-    plt.imshow(img)
-    plt.show()
+    # M, O = hof(flow)
+    #
+    # plt.imshow(M)
+    # plt.colorbar()
+    # plt.show()
+    #
+    # h, w = M.shape
+    # step = 128
+    #
+    # y, x = np.mgrid[0:h:step, 0:w:step].reshape(2,-1).astype(int)
+    # for (i, j) in zip(y, x):
+    #     val = M[i:(i + step), j:(j + step)].sum()
+    #     if val > 5 * 128 * 128:
+    #         img[i:(i + step), j:(j + step),0] = 255
+    #
+    # plt.imshow(img)
+    # plt.show()
     # H = gradient_Hist(M, O, bin=4, nOrients=num_orients, softBin=0, full=0)
 
     # h, w = H.shape[:2]
