@@ -64,13 +64,12 @@ if __name__ == '__main__':
     import sys
     print(__doc__)
 
-    file_path = 'C:/Users/nieka/Desktop/test_flow/data'
+    file_path = 'D:/TEST_DATA/test_flow/data'
     os.chdir(file_path)
 
     img_files = os.listdir('.')
 
     scale = 1
-
 
     prev = cv2.imread(img_files[0])
     prev = cv2.resize(prev, (prev.shape[1] / scale, prev.shape[0] / scale))
@@ -86,7 +85,7 @@ if __name__ == '__main__':
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
         start = time()
-        flow = cv2.calcOpticalFlowFarneback(prevgray, gray, 0.5, 3, 15, 3, 5, 1.2, 0)
+        flow = cv2.calcOpticalFlowFarneback(prevgray, gray, None, 0.5, 3, 15, 3, 5, 1.2, 0)
         end = time()
         print(end - start)
         prevgray = gray
@@ -123,10 +122,13 @@ if __name__ == '__main__':
                 cur_glitch = img.copy()
             print('glitch is', ['off', 'on'][show_glitch])
         if ch == ord('s'):
-            with open('flow.pkl', 'wb') as fp:
+            f_name =  'flow' + '_' + str(i) + '.pkl'
+            with open(f_name, 'wb') as fp:
                 cPickle.dump(flow, fp)
                 fp.close()
-            cv2.imwrite('previmg.jpg', previmg)
-            cv2.imwrite('img.jpg', img)
+            f_name =  'previmg' + '_' + str(i) + '.jpg'
+            cv2.imwrite(f_name, previmg)
+            f_name =  'img' + '_' + str(i) + '.jpg'
+            cv2.imwrite(f_name, img)
             print('save flow success')
     cv2.destroyAllWindows()
