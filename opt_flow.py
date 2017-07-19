@@ -24,6 +24,7 @@ import matplotlib.pyplot as plt
 from time import time
 import cPickle
 import matplotlib.pyplot as plt
+from getFeature_test import gradient_Mag
 
 
 def draw_flow(img, flow, step=16):
@@ -38,26 +39,19 @@ def draw_flow(img, flow, step=16):
         cv2.circle(vis, (x1, y1), 1, (0, 255, 0), -1)
     return vis
 
-def draw_motion(img_src, img_re, flow, scale, step=16):
+def draw_motion(img_src, img_re, flow, scale, step=32):
     h, w = img_re.shape[:2]
+
+    Gx, Gy = flow[:,:,0], flow[:,:,1]
+    M, O = cv2.cartToPolar(Gx, Gy, angleInDegrees=False)
+    O[O > np.pi] -= np.pi
+
     y, x = np.mgrid[step/2:h:step, step/2:w:step].reshape(2,-1).astype(int)
-    # fy, fx = flow[y,x].T
     vis = img_src.copy()
     for (i, j) in zip(y, x):
-        fy, fx = flow[i,j]
-        g = fx ** 2 + fy ** 2
-        if g > 1:
+        val = M[i:(i + step), j:(j + step)].sum()
+        if val > 2 * step * step:
             vis[i*scale:(i+step)*scale, j*scale:(j+step)*scale,2] = 255
-    # plt.imshow(vis)
-    # plt.show()
-
-
-    # lines = np.vstack([x, y, x+fx, y+fy]).T.reshape(-1, 2, 2)
-    # lines = np.int32(lines + 0.5)
-    # vis = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
-    # cv2.polylines(vis, lines, 0, (0, 255, 0))
-    # for (x1, y1), (x2, y2) in lines:
-    #     cv2.circle(vis, (x1, y1), 1, (0, 255, 0), -1)
     return vis
 
 
@@ -86,14 +80,16 @@ if __name__ == '__main__':
     import sys
     print(__doc__)
 
-    file_path = 'D:/TEST_DATA/test_flow/data'
-    os.chdir(file_path)
+    file_path = 'H:/2017-03-04-09-15-20/hiv00003.mp4'
+    # os.chdir(file_path)
+    #
+    # img_files = os.listdir('.')
+    #
+    scale = 4
 
-    img_files = os.listdir('.')
-
-    scale = 8
-
-    prev = cv2.imread(img_files[0])
+    cap = cv2.VideoCapture(file_path)
+    _, prev = cap.read()
+    # prev = cv2.imread(img_files[0])
     prev = cv2.resize(prev, (prev.shape[1] / scale, prev.shape[0] / scale))
     prevgray = cv2.cvtColor(prev, cv2.COLOR_BGR2GRAY)
     show_hsv = False
@@ -101,9 +97,13 @@ if __name__ == '__main__':
     cur_glitch = prev.copy()
 
     i = 2
-    while i  < len(img_files):
-        img = cv2.imread(img_files[i])
-        i += 2
+    while True:
+    # while i  < len(img_files):
+        _, img = cap.read()
+        _, img = cap.read()
+        _, img = cap.read()
+    #     _, img = cv2.imread(img_files[i])
+        # i += 2
         img_r = cv2.resize(img, (img.shape[1] / scale, img.shape[0] / scale))
 
         gray = cv2.cvtColor(img_r, cv2.COLOR_BGR2GRAY)

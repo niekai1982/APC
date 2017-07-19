@@ -27,6 +27,8 @@ import video
 from common import anorm2, draw_str
 from time import clock
 import os
+from time import time
+import matplotlib.pyplot as plt
 
 lk_params = dict( winSize  = (5, 5),
                   maxLevel = 2,
@@ -39,8 +41,8 @@ feature_params = dict( maxCorners = 500,
 
 class App:
     def __init__(self, video_src):
-        self.track_len = 10
-        self.detect_interval = 5
+        self.track_len = 5
+        self.detect_interval = 2
         self.tracks = []
         self.cam = video.create_capture(video_src)
         self.frame_idx = 0
@@ -57,10 +59,12 @@ class App:
                 p1, st, err = cv2.calcOpticalFlowPyrLK(img0, img1, p0, None, **lk_params)
                 p0r, st, err = cv2.calcOpticalFlowPyrLK(img1, img0, p1, None, **lk_params)
                 d = abs(p0-p0r).reshape(-1, 2).max(-1)
+                d_t = abs(p0-p1).reshape(-1, 2).max(-1)
                 good = d < 1
+                dist = d_t < 3
                 new_tracks = []
-                for tr, (x, y), good_flag in zip(self.tracks, p1.reshape(-1, 2), good):
-                    if not good_flag:
+                for tr, (x, y), good_flag, dist_flag in zip(self.tracks, p1.reshape(-1, 2), good, dist):
+                    if not good_flag or dist_flag:
                         continue
                     tr.append((x, y))
                     if len(tr) > self.track_len:
@@ -76,11 +80,14 @@ class App:
                 mask[:] = 255
                 for x, y in [np.int32(tr[-1]) for tr in self.tracks]:
                     cv2.circle(mask, (x, y), 5, 0, -1)
-                p = cv2.goodFeaturesToTrack(frame_gray, mask = mask, **feature_params)
+                # p = cv2.goodFeaturesToTrack(frame_gray, mask = mask, **feature_params)
+                step = 16
+                y, x = np.mgrid[step/2:frame.shape[0]:step, step/2:frame.shape[1]:step].reshape(2,-1).astype(int)
+                p = np.dstack((x, y))
+                p.shape = -1, 1, 2
                 if p is not None:
                     for x, y in np.float32(p).reshape(-1, 2):
                         self.tracks.append([(x, y)])
-
 
             self.frame_idx += 1
             self.prev_gray = frame_gray
@@ -98,16 +105,22 @@ class App:
             frame_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
             vis = frame.copy()
 
+            start = time()
             if len(self.tracks) > 0:
                 img0, img1 = self.prev_gray, frame_gray
                 p0 = np.float32([tr[-1] for tr in self.tracks]).reshape(-1, 1, 2)
                 p1, st, err = cv2.calcOpticalFlowPyrLK(img0, img1, p0, None, **lk_params)
                 p0r, st, err = cv2.calcOpticalFlowPyrLK(img1, img0, p1, None, **lk_params)
+                plt.scatter(p0[:,:,0], p0[:,:,1], c='r', marker='+')
+                plt.scatter(p1[:,:,0], p1[:,:,1], c='b', marker='+')
+                plt.show()
                 d = abs(p0-p0r).reshape(-1, 2).max(-1)
+                d_t = abs(p0-p1).reshape(-1, 2).max(-1)
                 good = d < 1
+                dist = d_t < 5
                 new_tracks = []
-                for tr, (x, y), good_flag in zip(self.tracks, p1.reshape(-1, 2), good):
-                    if not good_flag:
+                for tr, (x, y), good_flag, dist_flag in zip(self.tracks, p1.reshape(-1, 2), good, dist):
+                    if not good_flag or dist_flag:
                         continue
                     tr.append((x, y))
                     if len(tr) > self.track_len:
@@ -123,7 +136,13 @@ class App:
                 mask[:] = 255
                 for x, y in [np.int32(tr[-1]) for tr in self.tracks]:
                     cv2.circle(mask, (x, y), 5, 0, -1)
-                p = cv2.goodFeaturesToTrack(frame_gray, mask = mask, **feature_params)
+
+                step = 8
+                y, x = np.mgrid[step/2:frame.shape[0]:step, step/2:frame.shape[1]:step].reshape(2,-1).astype(int)
+                p = np.dstack((x, y))
+                p.shape = -1, 1, 2
+                # p = cv2.goodFeaturesToTrack(frame_gray, mask = mask, **feature_params)
+                # print (p.shape)
                 if p is not None:
                     for x, y in np.float32(p).reshape(-1, 2):
                         self.tracks.append([(x, y)])
@@ -131,6 +150,8 @@ class App:
 
             self.frame_idx += 1
             self.prev_gray = frame_gray
+            end = time()
+            print (end - start)
             cv2.imshow('lk_track', vis)
 
             ch = 0xFF & cv2.waitKey(1)
@@ -143,6 +164,7 @@ def main():
         video_src = sys.argv[1]
     except:
         video_src = 'D:/TEST_DATA/test_flow/data'
+        # video_src = 'H:/2017-03-04-09-15-20/hiv00003.mp4'
 
     print(__doc__)
     os.chdir(video_src)
