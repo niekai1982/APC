@@ -21,10 +21,12 @@ if __name__ == '__main__':
     with open('./data/flow_data/flow_30.pkl', 'rb') as fp:
         flow = cPickle.load(fp)
         fp.close()
-    img = cv2.imread('./data/flow_data/img_30.jpg')
-    img_prev = cv2.imread('./data/flow_data/previmg_30.jpg')
+    img = cv2.imread('./data/data/1227.jpg')
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    img_prev = cv2.imread('./data/data/1228.jpg')
+    gray_prev = cv2.cvtColor(img_prev, cv2.COLOR_BGR2GRAY)
 
-    plt.imshow(img)
+    plt.imshow(gray_prev)
     plt.show()
 
     # print flow.shape
