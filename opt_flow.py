@@ -85,7 +85,7 @@ if __name__ == '__main__':
     #
     # img_files = os.listdir('.')
     #
-    scale = 4
+    scale = 2
 
     cap = cv2.VideoCapture(file_path)
     _, prev = cap.read()
@@ -100,8 +100,8 @@ if __name__ == '__main__':
     while True:
     # while i  < len(img_files):
         _, img = cap.read()
-        _, img = cap.read()
-        _, img = cap.read()
+        # _, img = cap.read()
+        # _, img = cap.read()
     #     _, img = cv2.imread(img_files[i])
         # i += 2
         img_r = cv2.resize(img, (img.shape[1] / scale, img.shape[0] / scale))
@@ -115,10 +115,11 @@ if __name__ == '__main__':
         prevgray = gray
         previmg = img
 
-        vis = draw_motion(img, img_r, flow, scale)
+        # vis = draw_motion(img, img_r, flow, scale)
+        # vis = draw_flow(img_r, flow, step=16)
 
-        cv2.imshow('flow', vis)
-        # cv2.imshow('flow', draw_flow(gray, flow))
+        # cv2.imshow('flow', vis)
+        cv2.imshow('flow', draw_flow(gray, flow))
         # gx = flow[:,:,0]
         # gy = flow[:,:,1]
         # grident = gx * gx + gy * gy

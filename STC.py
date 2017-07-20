@@ -129,6 +129,7 @@ class App:
     def __init__(self, video_src, paused=False):
         self.cap = video.create_capture(video_src)
         _, self.frame = self.cap.read()
+        self.frame = cv2.resize(self.frame, (640, 320))
         # self.video_src = video_src
         # self.frames = os.listdir(video_src)
         # print self.frames
@@ -149,6 +150,7 @@ class App:
         while True:
             if not self.paused:
                 ret, self.frame = self.cap.read()
+                self.frame = cv2.resize(self.frame, (640, 320))
                 # self.frame = cv2.imread(os.path.join(self.video_src, self.frames[i]))
                 # i += 1
                 if not ret:
@@ -180,5 +182,6 @@ class App:
 
 if __name__ == '__main__':
     # video_src = r'E:\PROGRAM\APC\sample_test\2'
-    video_src = '0'
+    video_src = 'H:/2017-03-04-09-15-20/hiv00003.mp4'
+    # video_src = '0'
     App(video_src).run()

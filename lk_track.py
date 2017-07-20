@@ -19,7 +19,7 @@ ESC - exit
 '''
 
 # Python 2/3 compatibility
-from __future__ import print_function
+# from __future__ import print_function
 
 import numpy as np
 import cv2
@@ -41,15 +41,17 @@ feature_params = dict( maxCorners = 500,
 
 class App:
     def __init__(self, video_src):
-        self.track_len = 5
-        self.detect_interval = 2
+        self.track_len = 1000
+        self.detect_interval = 5
         self.tracks = []
         self.cam = video.create_capture(video_src)
         self.frame_idx = 0
 
     def run(self):
         while True:
+            scale = 2
             ret, frame = self.cam.read()
+            frame = cv2.resize(frame, (frame.shape[1] / scale, frame.shape[0] / scale))
             frame_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
             vis = frame.copy()
 
@@ -105,7 +107,7 @@ class App:
             frame_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
             vis = frame.copy()
 
-            start = time()
+            # start = time()
             if len(self.tracks) > 0:
                 img0, img1 = self.prev_gray, frame_gray
                 p0 = np.float32([tr[-1] for tr in self.tracks]).reshape(-1, 1, 2)
@@ -117,10 +119,10 @@ class App:
                 d = abs(p0-p0r).reshape(-1, 2).max(-1)
                 d_t = abs(p0-p1).reshape(-1, 2).max(-1)
                 good = d < 1
-                dist = d_t < 5
+                # dist = d_t < 1
                 new_tracks = []
-                for tr, (x, y), good_flag, dist_flag in zip(self.tracks, p1.reshape(-1, 2), good, dist):
-                    if not good_flag or dist_flag:
+                for tr, (x, y), good_flag in zip(self.tracks, p1.reshape(-1, 2), good):
+                    if not good_flag:
                         continue
                     tr.append((x, y))
                     if len(tr) > self.track_len:
@@ -137,7 +139,7 @@ class App:
                 for x, y in [np.int32(tr[-1]) for tr in self.tracks]:
                     cv2.circle(mask, (x, y), 5, 0, -1)
 
-                step = 8
+                step = 16
                 y, x = np.mgrid[step/2:frame.shape[0]:step, step/2:frame.shape[1]:step].reshape(2,-1).astype(int)
                 p = np.dstack((x, y))
                 p.shape = -1, 1, 2
@@ -147,11 +149,8 @@ class App:
                     for x, y in np.float32(p).reshape(-1, 2):
                         self.tracks.append([(x, y)])
 
-
             self.frame_idx += 1
             self.prev_gray = frame_gray
-            end = time()
-            print (end - start)
             cv2.imshow('lk_track', vis)
 
             ch = 0xFF & cv2.waitKey(1)
