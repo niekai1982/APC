@@ -23,34 +23,12 @@ lk_params = dict( winSize  = (4, 4),
                   maxLevel = 5,
                   criteria = (cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 0.03))
 
-def bb_predict(bb, pt0, pt1, idxF):
+def bb_predict(bb, pt0, pt1):
     of = pt1 - pt0
-    dx = median(of(1,:));
-    dy = median(of(2,:));
-
-    d1 = pdist(pt0
-    ','
-    euclidean
-    ');
-    d2 = pdist(pt1
-    ','
-    euclidean
-    ');
-    s = median(d2. / d1);
-
-    s1 = 0.5 * (s - 1) * bb_width(BB0);
-    s2 = 0.5 * (s - 1) * bb_height(BB0);
-
-    BB1 = [BB0(1) - s1;
-    BB0(2) - s2;
-    BB0(3) + s1;
-    BB0(4) + s2] + [dx;
-    dy;
-    dx;
-    dy];
-    shift = [s1;
-    s2];
-    pass
+    dx = np.median(of[:,:,0])
+    dy = np.median(of[:,:,1])
+    bb1 = bb[0] + dx, bb[1] + dy, bb[2], bb[3]
+    return bb1
 
 
 def bb_center(bb):
@@ -98,10 +76,12 @@ class OPF:
         ##initialization
         x1, y1, x2, y2 = rect
         w, h = [x2 - x1, y2 - y1]
+        self.bb = x1, y1, w, h
         self.pos = (x1 + x2) // 2, (y1 + y2) // 2
         self.pos_init = (x1 + x2) // 2, (y1 + y2) // 2
         self.target_sz = w, h
-        self.pt0 = bb_points([x1, y1, w, h], numM=50, numN=50)
+        self.pt0 = bb_points(self.bb, numM=20, numN=20)
+        self.pt1 = bb_points(self.bb, numM=20, numN=20)
 
         # self.updata_tracker(frame)
 
@@ -110,10 +90,11 @@ class OPF:
         p0 = p0.astype(np.float32)
         p1, st, err = cv2.calcOpticalFlowPyrLK(frame, frame_prev, p0, None, **lk_params)
         p0r, st, err = cv2.calcOpticalFlowPyrLK(frame_prev, frame, p1, None, **lk_params)
-        FB = euclideanDistance(p0, p1)
+        FB = euclideanDistance(p0, p0r)
         medFB = np.median(FB)
         idxF = FB >= medFB
-        self.pos = bb_predict(self.pt0, p0, p1, idxF)
+        self.bb = bb_predict(self.bb, p0, p1)
+        self.pt0 = bb_points(self.bb, numM=20, numN=20)
 
         # d = abs(p0-p0r).reshape(-1, 2).max(-1)
         # good = d < 1
@@ -199,6 +180,6 @@ class App:
 
 if __name__ == '__main__':
     # video_src = r'E:\PROGRAM\APC\sample_test\2'
-    video_src = 'H:/2017-03-04-09-15-20/hiv00003.mp4'
+    video_src = 'H:/2017-03-04-09-15-20/hiv00004.mp4'
     # video_src = '0'
     App(video_src).run()
