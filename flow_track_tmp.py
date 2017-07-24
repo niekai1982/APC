@@ -19,8 +19,10 @@ import time
 
 eps = 1e-20
 
-lk_params = dict( winSize  = (4, 4),
-                  maxLevel = 5,
+scale = 4
+
+lk_params = dict( winSize  = (5, 5),
+                  maxLevel = 3,
                   criteria = (cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 0.03))
 
 def bb_predict(bb, pt0, pt1):
@@ -80,21 +82,24 @@ class OPF:
         self.pos = (x1 + x2) // 2, (y1 + y2) // 2
         self.pos_init = (x1 + x2) // 2, (y1 + y2) // 2
         self.target_sz = w, h
-        self.pt0 = bb_points(self.bb, numM=20, numN=20)
-        self.pt1 = bb_points(self.bb, numM=20, numN=20)
+        self.pt0 = bb_points(self.bb, numM=10, numN=20)
+        self.pt1 = bb_points(self.bb, numM=10, numN=20)
 
         # self.updata_tracker(frame)
 
     def updata_tracker(self, frame_prev, frame):
         p0 = self.pt0
         p0 = p0.astype(np.float32)
+        start = time.time()
         p1, st, err = cv2.calcOpticalFlowPyrLK(frame, frame_prev, p0, None, **lk_params)
         p0r, st, err = cv2.calcOpticalFlowPyrLK(frame_prev, frame, p1, None, **lk_params)
+        end = time.time()
+        print end - start
         FB = euclideanDistance(p0, p0r)
         medFB = np.median(FB)
         idxF = FB >= medFB
         self.bb = bb_predict(self.bb, p0, p1)
-        self.pt0 = bb_points(self.bb, numM=20, numN=20)
+        self.pt0 = bb_points(self.bb, numM=10, numN=20)
 
         # d = abs(p0-p0r).reshape(-1, 2).max(-1)
         # good = d < 1
@@ -124,7 +129,7 @@ class App:
     def __init__(self, video_src, paused=False):
         self.cap = video.create_capture(video_src)
         _, self.frame = self.cap.read()
-        self.frame = cv2.resize(self.frame, (640, 320))
+        self.frame = cv2.resize(self.frame, (self.frame.shape[1] / scale, self.frame.shape[0] / scale))
         # self.video_src = video_src
         # self.frames = os.listdir(video_src)
         # print self.frames
@@ -146,7 +151,7 @@ class App:
             if not self.paused:
                 self.frame_prev = self.frame
                 ret, self.frame = self.cap.read()
-                self.frame = cv2.resize(self.frame, (640, 320))
+                self.frame = cv2.resize(self.frame, (self.frame.shape[1] / scale, self.frame.shape[0] / scale))
                 # self.frame = cv2.imread(os.path.join(self.video_src, self.frames[i]))
                 # i += 1
                 if not ret:
@@ -180,6 +185,7 @@ class App:
 
 if __name__ == '__main__':
     # video_src = r'E:\PROGRAM\APC\sample_test\2'
-    video_src = 'H:/2017-03-04-09-15-20/hiv00004.mp4'
+    video_src = 'H:/2017-03-04-09-15-20/hiv00003.mp4'
+    # video_src = '0'
     # video_src = '0'
     App(video_src).run()
