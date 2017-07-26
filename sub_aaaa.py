@@ -9,6 +9,7 @@ from time import time
 import cPickle
 from skimage import io
 
+
 def frameSub(img1, img2, img3, thr=20):
     gray1 = cv2.cvtColor(img1, cv2.COLOR_BGR2GRAY)
     gray2 = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
